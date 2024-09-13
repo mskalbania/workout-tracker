@@ -2,25 +2,27 @@ package main
 
 import (
 	"authorization-server/api"
-	"github.com/gin-gonic/gin"
+	"authorization-server/server"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/reflection"
 	"log"
-	"net/http"
+	"net"
 )
 
 func main() {
-	g := gin.Default()
-	tokenAPI := api.NewTokenAPI(map[string]string{
-		"test-user": "qwerty",
-	})
-	g.POST("/token", tokenAPI.IssueTokenHandler)
-
-	server := http.Server{
-		Addr:    "localhost:8080",
-		Handler: g.Handler(),
-	}
-
-	err := server.ListenAndServe()
+	lis, err := net.Listen("tcp", "localhost:8080")
 	if err != nil {
 		log.Fatalf("error starting server: %v", err)
+	}
+	s := grpc.NewServer()
+	server.RegisterAuthorizationServer(s, api.NewTokenAPI(map[string]string{
+		"admin": "admin",
+	}))
+
+	//for debugging purposes, allows clients to query for available services, types etc.
+	reflection.Register(s)
+
+	if err := s.Serve(lis); err != nil {
+		log.Fatalf("error serving: %v", err)
 	}
 }

@@ -1,9 +1,11 @@
 package api
 
 import (
-	"fmt"
-	"github.com/dgrijalva/jwt-go"
-	"github.com/gin-gonic/gin"
+	"authorization-server/server"
+	"context"
+	"github.com/golang-jwt/jwt/v5"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 	"time"
 )
 
@@ -11,6 +13,7 @@ import (
 var signSecret = []byte("secret")
 
 type TokenAPI struct {
+	server.UnimplementedAuthorizationServer
 	registeredUsers map[string]string
 }
 
@@ -18,51 +21,25 @@ func NewTokenAPI(registeredUsers map[string]string) *TokenAPI {
 	return &TokenAPI{registeredUsers: registeredUsers}
 }
 
-type tokenRequest struct {
-	User     string `json:"user" binding:"required"`
-	Password string `json:"password" binding:"required"`
-}
-
-type tokenResponse struct {
-	Token string `json:"token"`
-}
-
-type errResponse struct {
-	Message string `json:"message"`
-}
-
-func (t *TokenAPI) IssueTokenHandler(c *gin.Context) {
-	rq := new(tokenRequest)
-	err := c.ShouldBindJSON(rq)
-	if err != nil {
-		abortWithError(400, err, c)
-		return
-	}
-	pass, ok := t.registeredUsers[rq.User]
+func (t *TokenAPI) IssueToken(ctx context.Context, rq *server.IssueTokenRequest) (*server.IssueTokenResponse, error) {
+	pass, ok := t.registeredUsers[rq.Username]
 	if !ok || pass != rq.Password {
-		abortWithError(401, fmt.Errorf("user unautorized"), c)
-		return
+		err := status.Error(codes.Unauthenticated, "invalid username or password")
+		return nil, err
 	}
 	claims := struct {
 		Username string `json:"username"`
-		jwt.StandardClaims
+		jwt.RegisteredClaims
 	}{
-		Username: rq.User,
-		StandardClaims: jwt.StandardClaims{
-			ExpiresAt: time.Now().Add(15 * time.Minute).Unix(),
+		Username: rq.Username,
+		RegisteredClaims: jwt.RegisteredClaims{
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(15 * time.Minute)),
 		},
 	}
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	signedToken, err := token.SignedString(signSecret)
 	if err != nil {
-		abortWithError(500, err, c)
-		return
+		return nil, err
 	}
-	c.JSON(200, tokenResponse{Token: signedToken})
-}
-
-func abortWithError(status int, err error, c *gin.Context) {
-	c.JSON(status, errResponse{Message: err.Error()})
-	c.Error(err)
-	c.Abort()
+	return &server.IssueTokenResponse{Token: signedToken}, nil
 }

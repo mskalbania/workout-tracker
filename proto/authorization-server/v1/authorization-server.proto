@@ -1,0 +1,15 @@
+syntax = "proto3";
+option go_package = "./server";
+
+service Authorization {
+  rpc IssueToken(IssueTokenRequest) returns (IssueTokenResponse) {}
+}
+
+message IssueTokenRequest {
+  string username = 1;
+  string password = 2;
+}
+
+message IssueTokenResponse {
+  string token = 1;
+}
