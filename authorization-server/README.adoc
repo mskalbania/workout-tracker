@@ -1,2 +1,6 @@
 = Authorization Server
 
+Naive implementation of Authorization Server to fulfill authentication requirements for workout-tracker.
+
+- Server uses in-memory storage for users.
+- Issues JWT token when username and password are valid.

@@ -1,6 +1,0 @@
-use (
-	authorization-server
-	workout-tracker-server
-)
-
-go 1.23
