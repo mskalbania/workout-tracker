@@ -4,3 +4,5 @@ Naive gRPC implementation of Authorization Server to fulfill authentication requ
 
 - Server uses in-memory storage for users.
 - Issues JWT token when username and password are valid.
+- JWT contains user id and expiration time which is enough to fulfill access control requirements for workout-tracker.
+- JWT is signed with symmetric key, the least secure option, but enough for this example.

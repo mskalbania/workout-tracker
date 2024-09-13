@@ -1,0 +1,14 @@
+GRPC localhost:8080/Authorization/Register
+
+{
+  "username": "ghost",
+  "password": "qwerty"
+}
+
+###
+GRPC localhost:8080/Authorization/Login
+
+{
+  "username": "ghost",
+  "password": "qwerty"
+}
