@@ -5,6 +5,7 @@ import (
 	"authorization-server/model"
 	"authorization-server/server"
 	"context"
+	"errors"
 	"github.com/golang-jwt/jwt/v5"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -29,15 +30,15 @@ func NewAuthorizationAPI(userDb db.UserDb, properties JWTProperties) *Authorizat
 }
 
 func (a *AuthorizationAPI) Register(ctx context.Context, rq *server.RegisterRequest) (*server.RegisterResponse, error) {
-	user, err := a.userDb.Find(rq.Username)
+	_, err := a.userDb.Find(rq.Username)
+	if errors.Is(err, db.ErrUserNotFound) {
+		return nil, status.Error(codes.AlreadyExists, "user already exists")
+	}
 	if err != nil {
 		log.Printf("error finding user: %v", err)
 		return nil, status.Error(codes.Internal, "error finding user")
 	}
-	if user != nil {
-		return nil, status.Error(codes.AlreadyExists, "user already exists")
-	}
-	saved, err := a.userDb.Save(&model.User{
+	saved, err := a.userDb.Save(model.User{
 		Username: rq.Username,
 		Password: rq.Password,
 	})
@@ -52,11 +53,14 @@ func (a *AuthorizationAPI) Register(ctx context.Context, rq *server.RegisterRequ
 
 func (a *AuthorizationAPI) Login(ctx context.Context, rq *server.LoginRequest) (*server.LoginResponse, error) {
 	user, err := a.userDb.Find(rq.Username)
+	if errors.Is(err, db.ErrUserNotFound) {
+		return nil, status.Error(codes.Unauthenticated, "user not found")
+	}
 	if err != nil {
 		log.Printf("error finding user: %v", err)
 		return nil, status.Error(codes.Internal, "error finding user")
 	}
-	if user == nil || user.Password != rq.Password {
+	if user.Password != rq.Password {
 		return nil, status.Error(codes.Unauthenticated, "invalid credentials")
 	}
 	accessToken, err := generateJWT(user.Id, a.properties)
