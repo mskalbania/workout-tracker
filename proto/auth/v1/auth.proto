@@ -1,5 +1,5 @@
 syntax = "proto3";
-option go_package = "./server";
+option go_package = "./generated";
 
 service Authorization {
   rpc Register(RegisterRequest) returns (RegisterResponse) {}

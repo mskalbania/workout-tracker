@@ -3,13 +3,13 @@ package api
 import (
 	"authorization-server/db"
 	"authorization-server/model"
-	"authorization-server/server"
 	"context"
 	"errors"
 	"github.com/golang-jwt/jwt/v5"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"log"
+	auth "proto/auth/v1/generated"
 	"time"
 )
 
@@ -20,7 +20,7 @@ type JWTProperties struct {
 }
 
 type AuthorizationAPI struct {
-	server.UnimplementedAuthorizationServer
+	auth.UnimplementedAuthorizationServer
 	userDb     db.UserDb
 	properties JWTProperties
 }
@@ -29,29 +29,29 @@ func NewAuthorizationAPI(userDb db.UserDb, properties JWTProperties) *Authorizat
 	return &AuthorizationAPI{userDb: userDb, properties: properties}
 }
 
-func (a *AuthorizationAPI) Register(ctx context.Context, rq *server.RegisterRequest) (*server.RegisterResponse, error) {
+func (a *AuthorizationAPI) Register(ctx context.Context, rq *auth.RegisterRequest) (*auth.RegisterResponse, error) {
 	_, err := a.userDb.Find(rq.Username)
-	if errors.Is(err, db.ErrUserNotFound) {
+	if err == nil {
 		return nil, status.Error(codes.AlreadyExists, "user already exists")
 	}
-	if err != nil {
-		log.Printf("error finding user: %v", err)
-		return nil, status.Error(codes.Internal, "error finding user")
+	if errors.Is(err, db.ErrUserNotFound) {
+		saved, err := a.userDb.Save(model.User{
+			Username: rq.Username,
+			Password: rq.Password,
+		})
+		if err != nil {
+			log.Printf("error saving user: %v", err)
+			return nil, status.Error(codes.Internal, "error saving user")
+		}
+		return &auth.RegisterResponse{
+			UserId: saved.Id,
+		}, nil
 	}
-	saved, err := a.userDb.Save(model.User{
-		Username: rq.Username,
-		Password: rq.Password,
-	})
-	if err != nil {
-		log.Printf("error saving user: %v", err)
-		return nil, status.Error(codes.Internal, "error saving user")
-	}
-	return &server.RegisterResponse{
-		UserId: saved.Id,
-	}, nil
+	log.Printf("error finding user: %v", err)
+	return nil, status.Error(codes.Internal, "error finding user")
 }
 
-func (a *AuthorizationAPI) Login(ctx context.Context, rq *server.LoginRequest) (*server.LoginResponse, error) {
+func (a *AuthorizationAPI) Login(ctx context.Context, rq *auth.LoginRequest) (*auth.LoginResponse, error) {
 	user, err := a.userDb.Find(rq.Username)
 	if errors.Is(err, db.ErrUserNotFound) {
 		return nil, status.Error(codes.Unauthenticated, "user not found")
@@ -67,7 +67,7 @@ func (a *AuthorizationAPI) Login(ctx context.Context, rq *server.LoginRequest) (
 	if err != nil {
 		return nil, status.Error(codes.Internal, "error generating access token")
 	}
-	return &server.LoginResponse{
+	return &auth.LoginResponse{
 		Token: accessToken,
 	}, nil
 }

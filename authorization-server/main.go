@@ -3,12 +3,12 @@ package main
 import (
 	"authorization-server/api"
 	"authorization-server/db"
-	"authorization-server/server"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 	"log"
 	"net"
 	"os"
+	auth "proto/auth/v1/generated"
 	"time"
 )
 
@@ -31,7 +31,7 @@ func main() {
 	})
 
 	s := grpc.NewServer()
-	server.RegisterAuthorizationServer(s, userAPI)
+	auth.RegisterAuthorizationServer(s, userAPI)
 
 	//for debugging purposes, allows clients to query for available services, types etc.
 	reflection.Register(s)

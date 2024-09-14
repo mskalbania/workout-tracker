@@ -1,2 +1,3 @@
 #used to generate grpc code
-protoc --go_out=./authorization-server --go-grpc_out=./authorization-server  ./proto/authorization-server/v1/authorization-server.proto
+authPath=./proto/auth/v1
+protoc --go_out=$authPath --go-grpc_out=$authPath  $authPath/auth.proto
