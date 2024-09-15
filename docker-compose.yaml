@@ -1,0 +1,10 @@
+services:
+  authorization-server:
+    container_name: authorization-server
+    build:
+      context: .
+      dockerfile: authorization-server/Dockerfile
+    ports:
+      - "8080:8080"
+    environment:
+      - JWT_SIGNING_KEY=some-local-secret

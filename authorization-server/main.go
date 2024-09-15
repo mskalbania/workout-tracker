@@ -18,7 +18,7 @@ func main() {
 		log.Fatalf("JWT_SIGNING_KEY not set")
 	}
 
-	lis, err := net.Listen("tcp", "localhost:8080")
+	lis, err := net.Listen("tcp", ":8080")
 	if err != nil {
 		log.Fatalf("error starting server: %v", err)
 	}
