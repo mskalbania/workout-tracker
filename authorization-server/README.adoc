@@ -2,7 +2,8 @@
 
 gRPC implementation of Authorization Server to fulfill authentication requirements for workout-tracker.
 
-- Server uses in-memory storage for users.
+- Server uses postgres db to store user data.
+- Passwords are hashed using bcrypt.
 - Issues JWT token when username and password are valid.
 - JWT contains user id and expiration time which is enough to fulfill access control requirements for workout-tracker.
-- JWT is signed with symmetric key, the least secure option, but enough for this example.
+- JWT is signed with symmetric key, one of the least secure option, but enough for this example.

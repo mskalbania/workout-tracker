@@ -6,6 +6,7 @@ import (
 	"context"
 	"errors"
 	"github.com/golang-jwt/jwt/v5"
+	"golang.org/x/crypto/bcrypt"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"log"
@@ -35,9 +36,15 @@ func (a *AuthorizationAPI) Register(ctx context.Context, rq *auth.RegisterReques
 		return nil, status.Error(codes.AlreadyExists, "user already exists")
 	}
 	if errors.Is(err, db.ErrUserNotFound) {
+		hashedPassword, err := hashPassword(rq.Password)
+		if err != nil {
+			log.Printf("error hashing password: %v", err)
+			return nil, status.Error(codes.Internal, "error hashing password")
+
+		}
 		saved, err := a.userDb.Save(model.User{
-			Username: rq.Username,
-			Password: rq.Password,
+			Username:     rq.Username,
+			PasswordHash: hashedPassword,
 		})
 		if err != nil {
 			log.Printf("error saving user: %v", err)
@@ -51,6 +58,14 @@ func (a *AuthorizationAPI) Register(ctx context.Context, rq *auth.RegisterReques
 	return nil, status.Error(codes.Internal, "error finding user")
 }
 
+func hashPassword(password string) (string, error) {
+	hash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+	if err != nil {
+		return "", err
+	}
+	return string(hash), nil
+}
+
 func (a *AuthorizationAPI) Login(ctx context.Context, rq *auth.LoginRequest) (*auth.LoginResponse, error) {
 	user, err := a.userDb.Find(rq.Username)
 	if errors.Is(err, db.ErrUserNotFound) {
@@ -60,7 +75,8 @@ func (a *AuthorizationAPI) Login(ctx context.Context, rq *auth.LoginRequest) (*a
 		log.Printf("error finding user: %v", err)
 		return nil, status.Error(codes.Internal, "error finding user")
 	}
-	if user.Password != rq.Password {
+	invalid := bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(rq.Password))
+	if invalid != nil {
 		return nil, status.Error(codes.Unauthenticated, "invalid credentials")
 	}
 	accessToken, err := generateJWT(user.Id, a.properties)
