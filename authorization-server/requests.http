@@ -1,3 +1,4 @@
+#GoLand inbuilt HTTP client request collection
 GRPC localhost:8080/Authorization/Register
 
 {

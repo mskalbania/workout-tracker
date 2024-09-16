@@ -2,7 +2,7 @@ FROM golang:alpine AS builder
 
 RUN apk add --no-cache protobuf git \
   && go install google.golang.org/protobuf/cmd/protoc-gen-go@latest \
-      && go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest
+  && go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest
 
 #oprimizing build times
 COPY authorization-server/go.mod authorization-server/go.sum /source/

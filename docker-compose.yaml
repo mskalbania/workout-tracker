@@ -16,3 +16,6 @@ services:
       - "8080:8080"
     environment:
       - JWT_SIGNING_KEY=some-local-secret
+      - DB_CONN_STRING=postgresql://postgres:postgres@postgres:5432/postgres
+    depends_on:
+      - postgres
