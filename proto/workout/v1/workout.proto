@@ -1,0 +1,23 @@
+syntax = "proto3";
+option go_package = "./generated";
+
+service Exercise {
+  rpc GetExercises(GetExercisesRequest) returns (GetExercisesResponse) {}
+}
+
+message GetExercisesRequest {
+  optional string muscle_group_filter = 1;
+  optional string category_filter = 2;
+}
+
+message GetExercisesResponse {
+  repeated ExerciseValue exercises = 1;
+}
+
+message ExerciseValue {
+  string id = 1;
+  string name = 2;
+  string description = 3;
+  string muscle_group = 4;
+  string category = 5;
+}

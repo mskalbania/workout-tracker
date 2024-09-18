@@ -13,3 +13,11 @@ GRPC localhost:8080/Authorization/Login
   "username": "ghost",
   "password": "qwerty"
 }
+
+###
+GRPC localhost:8081/Exercise/GetExercises
+
+{
+  "muscle_group_filter": "Back",
+  "category_filter": "strength"
+}
