@@ -15,6 +15,7 @@ import (
 func main() {
 	appConf := loadAppConf()
 	database := db.NewPostgresDb(appConf.dbConnString)
+	authorization := auth.NewAuthorization(appConf.jwtSignKey)
 	exerciseAPI := api.NewExerciseAPI(database)
 	workoutAPI := api.NewWorkoutAPI(database)
 
@@ -22,7 +23,7 @@ func main() {
 	if err != nil {
 		log.Fatalf("error starting server: %v", err)
 	}
-	s := grpc.NewServer(grpc.UnaryInterceptor(auth.AuthorizationInterceptor))
+	s := grpc.NewServer(grpc.UnaryInterceptor(authorization.Interceptor))
 	workout.RegisterExerciseServer(s, exerciseAPI)
 	workout.RegisterWorkoutServer(s, workoutAPI)
 

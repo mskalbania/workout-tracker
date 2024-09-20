@@ -27,7 +27,15 @@ var (
 	}
 )
 
-func AuthorizationInterceptor(ctx context.Context, rq any, i *grpc.UnaryServerInfo, h grpc.UnaryHandler) (interface{}, error) {
+type Authorization struct {
+	SigningKey []byte
+}
+
+func NewAuthorization(signingKey string) *Authorization {
+	return &Authorization{[]byte(signingKey)}
+}
+
+func (a *Authorization) Interceptor(ctx context.Context, rq any, i *grpc.UnaryServerInfo, h grpc.UnaryHandler) (interface{}, error) {
 	if slices.Contains(requiresAuth, i.FullMethod) {
 		md, ok := metadata.FromIncomingContext(ctx)
 		if !ok {
@@ -38,7 +46,7 @@ func AuthorizationInterceptor(ctx context.Context, rq any, i *grpc.UnaryServerIn
 		if len(authHeader) == 0 {
 			return nil, errMissingToken
 		}
-		userId, err := parseJWT(authHeader[0])
+		userId, err := parseJWT(authHeader[0], a.SigningKey)
 		if err != nil {
 			return nil, err
 		}
@@ -55,26 +63,26 @@ func GetUserId(ctx context.Context) (UserId, error) {
 	return u, nil
 }
 
-func parseJWT(authHeader string) (UserId, error) {
-	authToken := strings.Split(authHeader, " ") //get part after Bearer
-	if len(authToken) != 2 {
+func parseJWT(authHeader string, key []byte) (UserId, error) {
+	parts := strings.Split(authHeader, " ")
+	if len(parts) != 2 {
 		return "", errInvalidTokenFormat
 	}
-	token, err := jwt.Parse(authToken[1], func(token *jwt.Token) (interface{}, error) {
+
+	token, err := jwt.Parse(parts[1], func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-			return nil, fmt.Errorf("signing method invalid")
+			return nil, fmt.Errorf("invalid signing method")
 		}
-		return []byte("some-local-secret"), nil
+		return key, nil
 	})
 	if err != nil {
-		log.Println("error parsing token:", err)
-		switch {
-		case errors.Is(err, jwt.ErrTokenExpired):
+		if errors.Is(err, jwt.ErrTokenExpired) {
 			return "", errExpiredToken
-		default:
-			return "", errInvalidTokenFormat
 		}
+		log.Println("error parsing token:", err)
+		return "", errInvalidTokenFormat
 	}
+
 	subject, err := token.Claims.GetSubject()
 	if err != nil || subject == "" {
 		return "", errMissingClaims
