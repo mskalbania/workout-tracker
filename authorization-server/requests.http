@@ -14,10 +14,21 @@ GRPC localhost:8080/Authorization/Login
   "password": "qwerty"
 }
 
+> {%
+    client.global.set("token", response.body.token);
+%}
+
 ###
 GRPC localhost:8081/Exercise/GetExercises
 
 {
   "muscle_group_filter": "Back",
   "category_filter": "strength"
+}
+
+###
+GRPC localhost:8081/Workout/CreateWorkout
+Authorization: Bearer {{token}}
+
+{
 }

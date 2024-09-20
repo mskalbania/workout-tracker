@@ -8,6 +8,7 @@ import (
 	"os"
 	workout "proto/workout/v1/generated"
 	"workout-tracker-server/api"
+	"workout-tracker-server/auth"
 	"workout-tracker-server/db"
 )
 
@@ -15,13 +16,15 @@ func main() {
 	appConf := loadAppConf()
 	database := db.NewPostgresDb(appConf.dbConnString)
 	exerciseAPI := api.NewExerciseAPI(database)
+	workoutAPI := api.NewWorkoutAPI(database)
 
 	lis, err := net.Listen("tcp", appConf.listenAddr)
 	if err != nil {
 		log.Fatalf("error starting server: %v", err)
 	}
-	s := grpc.NewServer()
+	s := grpc.NewServer(grpc.UnaryInterceptor(auth.AuthorizationInterceptor))
 	workout.RegisterExerciseServer(s, exerciseAPI)
+	workout.RegisterWorkoutServer(s, workoutAPI)
 
 	//for debugging purposes, reflection allows (generic) clients to query for available services, types etc.
 	reflection.Register(s)

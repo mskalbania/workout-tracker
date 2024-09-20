@@ -89,14 +89,10 @@ func (a *AuthorizationAPI) Login(ctx context.Context, rq *auth.LoginRequest) (*a
 }
 
 func generateJWT(userId string, properties JWTProperties) (string, error) {
-	claims := struct {
-		UserId string `json:"user_id"`
-		jwt.RegisteredClaims
-	}{
-		UserId: userId,
-		RegisteredClaims: jwt.RegisteredClaims{
-			ExpiresAt: jwt.NewNumericDate(time.Now().Add(properties.AccessTokenDuration)),
-		},
+	claims := jwt.RegisteredClaims{
+		Subject:   userId,
+		IssuedAt:  jwt.NewNumericDate(time.Now()),
+		ExpiresAt: jwt.NewNumericDate(time.Now().Add(properties.AccessTokenDuration)),
 	}
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	signedToken, err := token.SignedString(properties.SigningKey)

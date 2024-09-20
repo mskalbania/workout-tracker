@@ -5,6 +5,10 @@ service Exercise {
   rpc GetExercises(GetExercisesRequest) returns (GetExercisesResponse) {}
 }
 
+service Workout {
+  rpc CreateWorkout(CreateWorkoutRequest) returns (CreateWorkoutResponse) {}
+}
+
 message GetExercisesRequest {
   optional string muscle_group_filter = 1;
   optional string category_filter = 2;
@@ -20,4 +24,12 @@ message ExerciseValue {
   string description = 3;
   string muscle_group = 4;
   string category = 5;
+}
+
+//TODO
+message CreateWorkoutRequest {
+}
+
+message CreateWorkoutResponse {
+  string owner = 1;
 }
