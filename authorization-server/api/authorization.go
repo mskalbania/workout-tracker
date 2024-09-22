@@ -21,7 +21,7 @@ type JWTProperties struct {
 }
 
 type AuthorizationAPI struct {
-	auth.UnimplementedAuthorizationServer
+	auth.UnimplementedAuthorizationServiceServer
 	userDb     db.UserDb
 	properties JWTProperties
 }

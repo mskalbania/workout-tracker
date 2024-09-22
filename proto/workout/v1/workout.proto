@@ -1,11 +1,11 @@
 syntax = "proto3";
 option go_package = "./generated";
 
-service Exercise {
+service ExerciseService {
   rpc GetExercises(GetExercisesRequest) returns (GetExercisesResponse) {}
 }
 
-service Workout {
+service WorkoutService {
   rpc CreateWorkout(CreateWorkoutRequest) returns (CreateWorkoutResponse) {}
 }
 
@@ -15,10 +15,10 @@ message GetExercisesRequest {
 }
 
 message GetExercisesResponse {
-  repeated ExerciseValue exercises = 1;
+  repeated Exercise exercises = 1;
 }
 
-message ExerciseValue {
+message Exercise {
   string id = 1;
   string name = 2;
   string description = 3;
@@ -26,10 +26,20 @@ message ExerciseValue {
   string category = 5;
 }
 
-//TODO
 message CreateWorkoutRequest {
+  string name = 1;
+  string owner = 2;
+  repeated WorkoutExercise exercises = 3;
+}
+
+message WorkoutExercise {
+  string exercise_id = 1;
+  int32 order = 2;
+  int32 repetitions = 3;
+  int32 sets = 4;
+  optional int32 weight = 5;
 }
 
 message CreateWorkoutResponse {
-  string owner = 1;
+  string id = 1;
 }

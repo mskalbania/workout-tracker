@@ -10,7 +10,7 @@ import (
 )
 
 type ExerciseAPI struct {
-	workout.UnimplementedExerciseServer
+	workout.UnimplementedExerciseServiceServer
 	db db.ExerciseDb
 }
 
@@ -24,15 +24,5 @@ func (e *ExerciseAPI) GetExercises(ctx context.Context, rq *workout.GetExercises
 		log.Printf("error getting exercises: %v", err)
 		return nil, status.Error(codes.Internal, "error getting exercises")
 	}
-	exerciseValues := make([]*workout.ExerciseValue, len(exercises))
-	for i, ex := range exercises {
-		exerciseValues[i] = &workout.ExerciseValue{
-			Id:          ex.ID,
-			Name:        ex.Name,
-			Description: ex.Description,
-			MuscleGroup: ex.MuscleGroup,
-			Category:    ex.Category,
-		}
-	}
-	return &workout.GetExercisesResponse{Exercises: exerciseValues}, nil
+	return &workout.GetExercisesResponse{Exercises: exercises}, nil
 }

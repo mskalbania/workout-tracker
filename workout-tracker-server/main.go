@@ -23,9 +23,11 @@ func main() {
 	if err != nil {
 		log.Fatalf("error starting server: %v", err)
 	}
+	defer lis.Close()
+
 	s := grpc.NewServer(grpc.UnaryInterceptor(authorization.Interceptor))
-	workout.RegisterExerciseServer(s, exerciseAPI)
-	workout.RegisterWorkoutServer(s, workoutAPI)
+	workout.RegisterExerciseServiceServer(s, exerciseAPI)
+	workout.RegisterWorkoutServiceServer(s, workoutAPI)
 
 	//for debugging purposes, reflection allows (generic) clients to query for available services, types etc.
 	reflection.Register(s)

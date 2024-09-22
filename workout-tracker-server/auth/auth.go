@@ -14,8 +14,6 @@ import (
 	"strings"
 )
 
-type UserId string
-
 var (
 	userIdCtxKey          = "userId"
 	errInvalidTokenFormat = status.Errorf(codes.Unauthenticated, "invalid token - invalid format")
@@ -23,7 +21,7 @@ var (
 	errExpiredToken       = status.Errorf(codes.Unauthenticated, "invalid token - expired")
 	errMissingClaims      = status.Errorf(codes.Unauthenticated, "invalid token - missing claims")
 	requiresAuth          = []string{
-		"/Workout/CreateWorkout",
+		"/WorkoutService/CreateWorkout",
 	}
 )
 
@@ -55,15 +53,15 @@ func (a *Authorization) Interceptor(ctx context.Context, rq any, i *grpc.UnarySe
 	return h(ctx, rq)
 }
 
-func GetUserId(ctx context.Context) (UserId, error) {
-	u, ok := ctx.Value(userIdCtxKey).(UserId)
+func GetUserId(ctx context.Context) (string, error) {
+	u, ok := ctx.Value(userIdCtxKey).(string)
 	if !ok || u == "" {
 		return "", errors.New("user id not found in context")
 	}
 	return u, nil
 }
 
-func parseJWT(authHeader string, key []byte) (UserId, error) {
+func parseJWT(authHeader string, key []byte) (string, error) {
 	parts := strings.Split(authHeader, " ")
 	if len(parts) != 2 {
 		return "", errInvalidTokenFormat
@@ -87,5 +85,5 @@ func parseJWT(authHeader string, key []byte) (UserId, error) {
 	if err != nil || subject == "" {
 		return "", errMissingClaims
 	}
-	return UserId(subject), nil
+	return subject, nil
 }

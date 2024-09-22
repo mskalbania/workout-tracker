@@ -25,8 +25,10 @@ func main() {
 	if err != nil {
 		log.Fatalf("error starting server: %v", err)
 	}
+	defer lis.Close()
+
 	s := grpc.NewServer()
-	auth.RegisterAuthorizationServer(s, userAPI)
+	auth.RegisterAuthorizationServiceServer(s, userAPI)
 
 	//for debugging purposes, reflection allows (generic) clients to query for available services, types etc.
 	reflection.Register(s)
