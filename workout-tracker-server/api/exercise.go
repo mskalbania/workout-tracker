@@ -24,5 +24,9 @@ func (e *ExerciseAPI) GetExercises(ctx context.Context, rq *workout.GetExercises
 		log.Printf("error getting exercises: %v", err)
 		return nil, status.Error(codes.Internal, "error getting exercises")
 	}
-	return &workout.GetExercisesResponse{Exercises: exercises}, nil
+	var exercisesProto []*workout.Exercise
+	for _, e := range exercises {
+		exercisesProto = append(exercisesProto, e.ToProto())
+	}
+	return &workout.GetExercisesResponse{Exercises: exercisesProto}, nil
 }

@@ -3,27 +3,27 @@ package db
 import (
 	"context"
 	"fmt"
-	exercise "proto/workout/v1/generated"
 	"strings"
+	"workout-tracker-server/model"
 )
 
 const selectFromExercise = "SELECT * FROM exercise"
 
 type ExerciseDb interface {
-	GetExercises(muscleGroup string, category string) ([]*exercise.Exercise, error)
+	GetExercises(muscleGroup string, category string) ([]*model.Exercise, error)
 }
 
-func (p *PostgresDb) GetExercises(muscleGroup string, category string) ([]*exercise.Exercise, error) {
+func (p *PostgresDb) GetExercises(muscleGroup string, category string) ([]*model.Exercise, error) {
 	query, args := getExercisesQuery(muscleGroup, category)
 	rows, err := p.db.Query(context.Background(), query, args...)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var exercises []*exercise.Exercise
+	var exercises []*model.Exercise
 	for rows.Next() {
-		var ex exercise.Exercise
-		err := rows.Scan(&ex.Id, &ex.Name, &ex.Description, &ex.Category, &ex.MuscleGroup)
+		var ex model.Exercise
+		err := rows.Scan(&ex.ID, &ex.Name, &ex.Description, &ex.Category, &ex.MuscleGroup)
 		if err != nil {
 			return nil, err
 		}

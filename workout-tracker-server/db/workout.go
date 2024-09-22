@@ -8,7 +8,7 @@ import (
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
 	"log"
-	workout "proto/workout/v1/generated"
+	"workout-tracker-server/model"
 )
 
 var (
@@ -18,32 +18,26 @@ var (
 )
 
 type WorkoutDb interface {
-	SaveWorkout(workout *workout.CreateWorkoutRequest) (string, error)
+	SaveWorkout(workout model.Workout) (string, error)
 }
 
-func (p *PostgresDb) SaveWorkout(workout *workout.CreateWorkoutRequest) (string, error) {
+func (p *PostgresDb) SaveWorkout(workout model.Workout) (string, error) {
 	workoutId := uuid.New().String()
-	tx, err := p.db.BeginTx(context.Background(), pgx.TxOptions{
+	ctx := context.Background()
+	tx, err := p.db.BeginTx(ctx, pgx.TxOptions{
 		IsoLevel:   pgx.ReadCommitted,
 		AccessMode: pgx.ReadWrite,
 	})
 	if err != nil {
 		return "", err
 	}
-	defer tx.Rollback(context.Background())
-	_, err = tx.Exec(context.Background(), insertWorkoutQuery, workoutId, workout.Owner, workout.Name)
-	for _, exercises := range workout.Exercises {
-		_, err = tx.Exec(context.Background(),
-			insertWorkoutExerciseQuery,
-			workoutId,
-			exercises.GetExerciseId(),
-			exercises.GetOrder(),
-			exercises.GetRepetitions(),
-			exercises.GetSets(),
-			exercises.Weight)
-		if err != nil {
+	defer tx.Rollback(ctx)
+	if _, err = tx.Exec(ctx, insertWorkoutQuery, workoutId, workout.Owner, workout.Name); err != nil {
+		return "", err
+	}
+	for _, ex := range workout.Exercises {
+		if _, err = tx.Exec(ctx, insertWorkoutExerciseQuery, workoutId, ex.ExerciseID, ex.Order, ex.Repetitions, ex.Sets, ex.Weight); err != nil {
 			var pgErr *pgconn.PgError
-			//either violation of foreign key constraint or invalid uuid representation
 			if errors.As(err, &pgErr) && (pgErr.Code == "23503" || pgErr.Code == "22P02") {
 				return "", ErrIncorrectExerciseReferenced
 			}
@@ -51,11 +45,7 @@ func (p *PostgresDb) SaveWorkout(workout *workout.CreateWorkoutRequest) (string,
 			return "", err
 		}
 	}
-	if err != nil {
-		return "", err
-	}
-	err = tx.Commit(context.Background())
-	if err != nil {
+	if err = tx.Commit(ctx); err != nil {
 		return "", err
 	}
 	return workoutId, nil

@@ -9,6 +9,7 @@ import (
 	workout "proto/workout/v1/generated"
 	"workout-tracker-server/auth"
 	"workout-tracker-server/db"
+	"workout-tracker-server/model"
 )
 
 type WorkoutAPI struct {
@@ -28,7 +29,7 @@ func (w *WorkoutAPI) CreateWorkout(ctx context.Context, rq *workout.CreateWorkou
 	if userId != rq.GetOwner() {
 		return nil, status.Error(codes.PermissionDenied, "access forbidden")
 	}
-	id, err := w.db.SaveWorkout(rq)
+	id, err := w.db.SaveWorkout(toWorkout(rq))
 	if err != nil {
 		if errors.Is(err, db.ErrIncorrectExerciseReferenced) {
 			return nil, status.Error(codes.InvalidArgument, "incorrect exercise referenced")
@@ -39,4 +40,16 @@ func (w *WorkoutAPI) CreateWorkout(ctx context.Context, rq *workout.CreateWorkou
 	return &workout.CreateWorkoutResponse{
 		Id: id,
 	}, nil
+}
+
+func toWorkout(rq *workout.CreateWorkoutRequest) model.Workout {
+	var exercises []model.WorkoutExercise
+	for _, ex := range rq.Exercises {
+		exercises = append(exercises, model.FromProto(ex))
+	}
+	return model.Workout{
+		Owner:     rq.Owner,
+		Name:      rq.Name,
+		Exercises: exercises,
+	}
 }
