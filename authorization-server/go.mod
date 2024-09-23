@@ -5,10 +5,9 @@ go 1.23
 require (
 	github.com/golang-jwt/jwt/v5 v5.2.1
 	github.com/google/uuid v1.6.0
-	github.com/grpc-ecosystem/grpc-gateway/v2 v2.22.0
 	github.com/jackc/pgx/v5 v5.7.1
 	golang.org/x/crypto v0.27.0
-	google.golang.org/genproto/googleapis/api v0.0.0-20240814211410-ddb44dafa142
+	google.golang.org/genproto/googleapis/api v0.0.0-20240604185151-ef581f913117
 	google.golang.org/grpc v1.66.2
 )
 

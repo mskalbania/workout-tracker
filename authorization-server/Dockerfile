@@ -12,7 +12,7 @@ RUN go mod download
 
 #generating proto+grpc stuff, copy to go src so it is available for the build
 COPY proto /source/proto
-COPY protoc.sh /source/protoc.sh
+COPY protoc-auth-server.sh /source/protoc.sh
 RUN chmod +x /source/protoc.sh \
     && /source/protoc.sh  \
     && cp -r /source/proto /usr/local/go/src/proto
