@@ -7,6 +7,15 @@ GRPC localhost:8080/AuthorizationService/Register
 }
 
 ###
+POST localhost:8888/v1/auth/register
+Content-Type: application/json
+
+{
+  "username": "ghost",
+  "password": "qwerty"
+}
+
+###
 GRPC localhost:8080/AuthorizationService/Login
 
 {
@@ -17,6 +26,15 @@ GRPC localhost:8080/AuthorizationService/Login
 > {%
     client.global.set("token", response.body.token);
 %}
+
+###
+POST localhost:8888/v1/auth/login
+Content-Type: application/json
+
+{
+  "username": "ghost",
+  "password": "qwerty"
+}
 
 ###
 GRPC localhost:8081/ExerciseService/GetExercises

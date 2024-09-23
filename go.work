@@ -2,5 +2,10 @@ use (
 	authorization-server
 	proto
 	workout-tracker-server
+	grpc-gateway
 )
 go 1.23
+
+replace (
+	google.golang.org/genproto => github.com/google/go-genproto v0.0.0-20240903143218-8af14fe29dc1
+)

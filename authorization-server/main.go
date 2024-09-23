@@ -3,6 +3,10 @@ package main
 import (
 	"authorization-server/api"
 	"authorization-server/db"
+	//TODO this is potentially incorrect, auth service doesn't directly depend on those but proto module does
+	_ "github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
+	_ "github.com/grpc-ecosystem/grpc-gateway/v2/utilities"
+	_ "google.golang.org/genproto/googleapis/api"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 	"log"
