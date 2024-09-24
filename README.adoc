@@ -8,5 +8,7 @@ Workout tracker gRPC implementation based on https://roadmap.sh/projects/fitness
 
 
 More TODO/Ideas:
+
+* server streaming for get endpoints
 * Add refresh tokens - currently re-login is required after access token expiry.
 * Switch to always online validation of JWT tokens and keep offline as fallback to invalidate JWT tokens on logout, currently logout = remove token from device cache. Since project is gRPC latency tradeoff could be acceptable.

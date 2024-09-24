@@ -15,6 +15,12 @@ curl --request GET \
 curl --request GET \
      --url 'https://raw.githubusercontent.com/protocolbuffers/protobuf/refs/heads/main/src/google/protobuf/descriptor.proto' \
      --output './proto/google/protobuf/descriptor.proto'
+curl --request GET \
+     --url 'https://raw.githubusercontent.com/protocolbuffers/protobuf/refs/heads/main/src/google/protobuf/empty.proto' \
+     --output './proto/google/protobuf/empty.proto'
+curl --request GET \
+     --url 'https://raw.githubusercontent.com/protocolbuffers/protobuf/refs/heads/main/src/google/protobuf/field_mask.proto' \
+     --output './proto/google/protobuf/field_mask.proto'
 
 workoutPath=./proto/workout/v1
 protoc -I ./proto -I ./proto/google/api --go_out=$workoutPath --go-grpc_out=$workoutPath $workoutPath/workout.proto

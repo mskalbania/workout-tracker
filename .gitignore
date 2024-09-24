@@ -1,3 +1,4 @@
 *.pb.go
 *.pb.gw.go
 /proto/google
+remove_gen.sh

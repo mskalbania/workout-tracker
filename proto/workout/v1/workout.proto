@@ -2,6 +2,8 @@ syntax = "proto3";
 option go_package = "./generated";
 
 import "google/api/annotations.proto";
+import "google/protobuf/empty.proto";
+import "google/protobuf/field_mask.proto";
 
 service ExerciseService {
   rpc GetExercises(GetExercisesRequest) returns (GetExercisesResponse) {
@@ -18,10 +20,10 @@ service WorkoutService {
       body: "*"
     };
   }
-  rpc UpdateWorkoutExercise(UpdateWorkoutRequest) returns (UpdateWorkoutResponse) {
+  rpc UpdateWorkoutExercise(UpdateWorkoutRequest) returns (google.protobuf.Empty) {
     option (google.api.http) = {
-      put: "/v1/workouts/{workout_id}/exercises/{exercise_id}"
-      body: "*"
+      patch: "/v1/workouts/{exercise.workout_id}/exercises/{exercise.exercise_id}"
+      body: "exercise" //it will automatically populate field mask paths
     };
   }
 }
@@ -49,18 +51,7 @@ message CreateWorkoutRequest {
 }
 
 message WorkoutExercise {
-  string exercise_id = 1;
-  int32 order = 2;
-  int32 repetitions = 3;
-  int32 sets = 4;
-  optional int32 weight = 5;
-}
-
-message CreateWorkoutResponse {
-  string id = 1;
-}
-
-message UpdateWorkoutRequest {
+  // Output only.
   string workout_id = 1;
   string exercise_id = 2;
   int32 order = 3;
@@ -69,4 +60,11 @@ message UpdateWorkoutRequest {
   optional int32 weight = 6;
 }
 
-message UpdateWorkoutResponse {}
+message CreateWorkoutResponse {
+  string id = 1;
+}
+
+message UpdateWorkoutRequest {
+  WorkoutExercise exercise = 1;
+  google.protobuf.FieldMask update_mask = 2;
+}

@@ -7,18 +7,19 @@ import (
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
-	"log"
 	"workout-tracker-server/model"
 )
 
 var (
 	ErrIncorrectExerciseReferenced = fmt.Errorf("incorrect exercise referenced")
+	ErrWorkoutNotFound             = fmt.Errorf("workout not found")
 	insertWorkoutQuery             = `INSERT INTO workout (id, owner, name) VALUES ($1, $2, $3)`
 	insertWorkoutExerciseQuery     = `INSERT INTO workout_exercise (workout_id, exercise_id, "order", repetitions, sets, weight) VALUES ($1, $2, $3, $4, $5, $6)`
 )
 
 type WorkoutDb interface {
 	SaveWorkout(workout model.Workout) (string, error)
+	GetWorkout(id string) (model.Workout, error)
 }
 
 func (p *PostgresDb) SaveWorkout(workout model.Workout) (string, error) {
@@ -41,7 +42,6 @@ func (p *PostgresDb) SaveWorkout(workout model.Workout) (string, error) {
 			if errors.As(err, &pgErr) && (pgErr.Code == "23503" || pgErr.Code == "22P02") {
 				return "", ErrIncorrectExerciseReferenced
 			}
-			log.Printf("error inserting workout exercise: %v", err)
 			return "", err
 		}
 	}
@@ -49,4 +49,16 @@ func (p *PostgresDb) SaveWorkout(workout model.Workout) (string, error) {
 		return "", err
 	}
 	return workoutId, nil
+}
+
+func (p *PostgresDb) GetWorkout(id string) (model.Workout, error) {
+	row := p.db.QueryRow(context.Background(), "SELECT id, owner, name FROM workout WHERE id = $1", id)
+	var workout model.Workout
+	if err := row.Scan(&workout.ID, &workout.OwnerID, &workout.Name); err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return model.Workout{}, ErrWorkoutNotFound
+		}
+		return model.Workout{}, err
+	}
+	return workout, nil
 }
