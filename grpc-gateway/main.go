@@ -28,7 +28,9 @@ func main() {
 	}
 	grpclog.SetLoggerV2(grpclog.NewLoggerV2(os.Stdout, os.Stdout, os.Stdout))
 
-	mux := runtime.NewServeMux()
+	mux := runtime.NewServeMux(
+		runtime.WithErrorHandler(ErrorHandler),
+	)
 	opts := []grpc.DialOption{grpc.WithTransportCredentials(insecure.NewCredentials())}
 	err := auth.RegisterAuthorizationServiceHandlerFromEndpoint(context.Background(), mux, authSrvcAddr, opts)
 	if err != nil {

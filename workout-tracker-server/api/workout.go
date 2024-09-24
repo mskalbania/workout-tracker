@@ -56,9 +56,14 @@ func (w *WorkoutAPI) UpdateWorkoutExercise(ctx context.Context, rq *workout.Upda
 	if wrk.OwnerID != uuid {
 		return nil, status.Error(codes.PermissionDenied, "access forbidden")
 	}
-
-	//TODO UPDATE LOGIC BASED ON MASK
-	log.Printf("updating workout exercise: %v", rq)
+	err = w.db.UpdateWorkoutExercise(rq.Exercise.WorkoutId, model.FromProto(rq.GetExercise()), rq.UpdateMask)
+	if errors.Is(err, db.ErrorExerciseNotFound) {
+		return nil, status.Error(codes.NotFound, "exercise not found")
+	}
+	if err != nil {
+		log.Printf("error updating workout exercise: %v", err)
+		return nil, status.Error(codes.Internal, "error updating workout exercise")
+	}
 	return &emptypb.Empty{}, nil
 }
 

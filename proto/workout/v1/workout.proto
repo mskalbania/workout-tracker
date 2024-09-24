@@ -50,6 +50,15 @@ message CreateWorkoutRequest {
   repeated WorkoutExercise exercises = 2;
 }
 
+message CreateWorkoutResponse {
+  string id = 1;
+}
+
+message UpdateWorkoutRequest {
+  WorkoutExercise exercise = 1;
+  google.protobuf.FieldMask update_mask = 2;
+}
+
 message WorkoutExercise {
   // Output only.
   string workout_id = 1;
@@ -58,13 +67,4 @@ message WorkoutExercise {
   int32 repetitions = 4;
   int32 sets = 5;
   optional int32 weight = 6;
-}
-
-message CreateWorkoutResponse {
-  string id = 1;
-}
-
-message UpdateWorkoutRequest {
-  WorkoutExercise exercise = 1;
-  google.protobuf.FieldMask update_mask = 2;
 }

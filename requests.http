@@ -45,7 +45,8 @@ Authorization: Bearer {{token}}
 Content-Type: application/json
 
 {
-  "weight": 60
+  "order": 333,
+  "repetitions": 333
 }
 
 ###GRPC Collection (requires exposing ports in docker-compose)

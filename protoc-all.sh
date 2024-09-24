@@ -1,24 +1,24 @@
 mkdir -p ./proto/google/api
 mkdir -p ./proto/google/protobuf
-curl --request GET \
+curl --request GET -sL \
      --url 'https://raw.githubusercontent.com/googleapis/googleapis/refs/heads/master/google/api/http.proto' \
      --output './proto/google/api/http.proto'
-curl --request GET \
+curl --request GET -sL \
      --url 'https://raw.githubusercontent.com/googleapis/googleapis/refs/heads/master/google/api/annotations.proto' \
      --output './proto/google/api/annotations.proto'
-curl --request GET \
+curl --request GET -sL \
      --url 'https://raw.githubusercontent.com/googleapis/googleapis/refs/heads/master/google/api/field_behavior.proto' \
      --output './proto/google/api/field_behavior.proto'
-curl --request GET \
+curl --request GET -sL \
      --url 'https://raw.githubusercontent.com/googleapis/googleapis/refs/heads/master/google/api/httpbody.proto' \
      --output './proto/google/api/httpbody.proto'
-curl --request GET \
+curl --request GET -sL \
      --url 'https://raw.githubusercontent.com/protocolbuffers/protobuf/refs/heads/main/src/google/protobuf/descriptor.proto' \
      --output './proto/google/protobuf/descriptor.proto'
-curl --request GET \
+curl --request GET -sL \
      --url 'https://raw.githubusercontent.com/protocolbuffers/protobuf/refs/heads/main/src/google/protobuf/empty.proto' \
      --output './proto/google/protobuf/empty.proto'
-curl --request GET \
+curl --request GET -sL \
      --url 'https://raw.githubusercontent.com/protocolbuffers/protobuf/refs/heads/main/src/google/protobuf/field_mask.proto' \
      --output './proto/google/protobuf/field_mask.proto'
 

@@ -1,6 +1,8 @@
 package model
 
-import workout "proto/workout/v1/generated"
+import (
+	workout "proto/workout/v1/generated"
+)
 
 type Workout struct {
 	ID        string
