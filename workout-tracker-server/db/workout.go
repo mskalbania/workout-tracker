@@ -32,7 +32,7 @@ func (p *PostgresDb) SaveWorkout(workout model.Workout) (string, error) {
 		return "", err
 	}
 	defer tx.Rollback(ctx)
-	if _, err = tx.Exec(ctx, insertWorkoutQuery, workoutId, workout.Owner, workout.Name); err != nil {
+	if _, err = tx.Exec(ctx, insertWorkoutQuery, workoutId, workout.OwnerID, workout.Name); err != nil {
 		return "", err
 	}
 	for _, ex := range workout.Exercises {

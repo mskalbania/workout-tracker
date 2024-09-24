@@ -18,6 +18,12 @@ service WorkoutService {
       body: "*"
     };
   }
+  rpc UpdateWorkoutExercise(UpdateWorkoutRequest) returns (UpdateWorkoutResponse) {
+    option (google.api.http) = {
+      put: "/v1/workouts/{workout_id}/exercises/{exercise_id}"
+      body: "*"
+    };
+  }
 }
 
 message GetExercisesRequest {
@@ -39,8 +45,7 @@ message Exercise {
 
 message CreateWorkoutRequest {
   string name = 1;
-  string owner = 2;
-  repeated WorkoutExercise exercises = 3;
+  repeated WorkoutExercise exercises = 2;
 }
 
 message WorkoutExercise {
@@ -54,3 +59,14 @@ message WorkoutExercise {
 message CreateWorkoutResponse {
   string id = 1;
 }
+
+message UpdateWorkoutRequest {
+  string workout_id = 1;
+  string exercise_id = 2;
+  int32 order = 3;
+  int32 repetitions = 4;
+  int32 sets = 5;
+  optional int32 weight = 6;
+}
+
+message UpdateWorkoutResponse {}

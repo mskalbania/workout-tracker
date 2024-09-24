@@ -26,10 +26,7 @@ func (w *WorkoutAPI) CreateWorkout(ctx context.Context, rq *workout.CreateWorkou
 	if err != nil {
 		return nil, status.Error(codes.Internal, "user id not found in context")
 	}
-	if userId != rq.GetOwner() {
-		return nil, status.Error(codes.PermissionDenied, "access forbidden")
-	}
-	id, err := w.db.SaveWorkout(toWorkout(rq))
+	id, err := w.db.SaveWorkout(toWorkout(userId, rq))
 	if err != nil {
 		if errors.Is(err, db.ErrIncorrectExerciseReferenced) {
 			return nil, status.Error(codes.InvalidArgument, "incorrect exercise referenced")
@@ -42,13 +39,23 @@ func (w *WorkoutAPI) CreateWorkout(ctx context.Context, rq *workout.CreateWorkou
 	}, nil
 }
 
-func toWorkout(rq *workout.CreateWorkoutRequest) model.Workout {
+func (w *WorkoutAPI) UpdateWorkoutExercise(ctx context.Context, rq *workout.UpdateWorkoutRequest) (*workout.UpdateWorkoutResponse, error) {
+	uuid, err := auth.GetUserId(ctx)
+	if err != nil {
+		log.Printf("error getting user id: %v", err)
+	}
+	log.Printf("user id: %v", uuid)
+	log.Println("update workout rq", rq.String())
+	return &workout.UpdateWorkoutResponse{}, nil
+}
+
+func toWorkout(userId string, rq *workout.CreateWorkoutRequest) model.Workout {
 	var exercises []model.WorkoutExercise
 	for _, ex := range rq.Exercises {
 		exercises = append(exercises, model.FromProto(ex))
 	}
 	return model.Workout{
-		Owner:     rq.Owner,
+		OwnerID:   userId,
 		Name:      rq.Name,
 		Exercises: exercises,
 	}

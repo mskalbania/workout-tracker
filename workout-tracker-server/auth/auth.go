@@ -22,6 +22,7 @@ var (
 	errMissingClaims      = status.Errorf(codes.Unauthenticated, "invalid token - missing claims")
 	requiresAuth          = []string{
 		"/WorkoutService/CreateWorkout",
+		"/WorkoutService/UpdateWorkoutExercise",
 	}
 )
 

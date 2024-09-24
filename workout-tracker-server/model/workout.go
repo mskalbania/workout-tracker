@@ -4,7 +4,7 @@ import workout "proto/workout/v1/generated"
 
 type Workout struct {
 	ID        string
-	Owner     string
+	OwnerID   string
 	Name      string
 	Exercises []WorkoutExercise
 }
