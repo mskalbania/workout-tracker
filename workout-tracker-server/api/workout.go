@@ -40,6 +40,18 @@ func (w *WorkoutAPI) CreateWorkout(ctx context.Context, rq *workout.CreateWorkou
 	}, nil
 }
 
+func toWorkout(userId string, rq *workout.CreateWorkoutRequest) model.Workout {
+	var exercises []model.WorkoutExercise
+	for _, ex := range rq.Exercises {
+		exercises = append(exercises, model.FromProto(ex))
+	}
+	return model.Workout{
+		OwnerID:   userId,
+		Name:      rq.Name,
+		Exercises: exercises,
+	}
+}
+
 func (w *WorkoutAPI) UpdateWorkoutExercise(ctx context.Context, rq *workout.UpdateWorkoutRequest) (*emptypb.Empty, error) {
 	uuid, err := auth.GetUserId(ctx)
 	if err != nil {
@@ -67,14 +79,22 @@ func (w *WorkoutAPI) UpdateWorkoutExercise(ctx context.Context, rq *workout.Upda
 	return &emptypb.Empty{}, nil
 }
 
-func toWorkout(userId string, rq *workout.CreateWorkoutRequest) model.Workout {
-	var exercises []model.WorkoutExercise
-	for _, ex := range rq.Exercises {
-		exercises = append(exercises, model.FromProto(ex))
+func (w *WorkoutAPI) ListWorkouts(context context.Context, _ *emptypb.Empty) (*workout.ListWorkoutsResponse, error) {
+	userId, err := auth.GetUserId(context)
+	if err != nil {
+		return nil, status.Error(codes.Internal, "user id not found in context")
 	}
-	return model.Workout{
-		OwnerID:   userId,
-		Name:      rq.Name,
-		Exercises: exercises,
+	workouts, err := w.db.GetWorkouts(userId)
+	if err != nil {
+		log.Printf("error listing workouts: %v", err)
+		return nil, status.Error(codes.Internal, "error listing workouts")
 	}
+	var resp workout.ListWorkoutsResponse
+	for _, wrk := range workouts {
+		resp.Workouts = append(resp.Workouts, &workout.Workout{
+			Id:   wrk.ID,
+			Name: wrk.Name,
+		})
+	}
+	return &resp, nil
 }

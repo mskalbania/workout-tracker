@@ -8,6 +8,7 @@ import (
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
 	"google.golang.org/protobuf/types/known/fieldmaskpb"
+	"log"
 	"strconv"
 	"strings"
 	"workout-tracker-server/model"
@@ -18,15 +19,17 @@ var (
 	ErrWorkoutNotFound             = fmt.Errorf("workout not found")
 	ErrorExerciseNotFound          = fmt.Errorf("exercise not found")
 	insertWorkoutQuery             = `INSERT INTO workout (id, owner, name) VALUES ($1, $2, $3)`
-	insertWorkoutExerciseQuery     = `INSERT INTO workout_exercise (workout_id, exercise_id, "order", repetitions, sets, weight) VALUES ($1, $2, $3, $4, $5, $6)`
+	insertWorkoutExerciseQuery     = `INSERT INTO workout_exercise (workout_exercise_id, workout_id, exercise_id, "order", repetitions, sets, weight) VALUES ($1, $2, $3, $4, $5, $6, $7)`
 	selectWorkoutQuery             = `SELECT id, owner, name FROM workout WHERE id = $1`
 	updateWorkoutExerciseQuery     = `UPDATE workout_exercise SET`
+	selectWorkoutsByUserIdQuery    = `SELECT id, owner, name FROM workout WHERE owner = $1`
 )
 
 type WorkoutDb interface {
 	SaveWorkout(workout model.Workout) (string, error)
 	GetWorkout(id string) (model.Workout, error)
 	UpdateWorkoutExercise(workoutId string, exercise model.WorkoutExercise, mask *fieldmaskpb.FieldMask) error
+	GetWorkouts(userId string) ([]model.Workout, error)
 }
 
 func (p *PostgresDb) SaveWorkout(workout model.Workout) (string, error) {
@@ -44,7 +47,8 @@ func (p *PostgresDb) SaveWorkout(workout model.Workout) (string, error) {
 		return "", err
 	}
 	for _, ex := range workout.Exercises {
-		if _, err = tx.Exec(ctx, insertWorkoutExerciseQuery, workoutId, ex.ExerciseID, ex.Order, ex.Repetitions, ex.Sets, ex.Weight); err != nil {
+		workoutExerciseId := uuid.New().String()
+		if _, err = tx.Exec(ctx, insertWorkoutExerciseQuery, workoutExerciseId, workoutId, ex.ExerciseID, ex.Order, ex.Repetitions, ex.Sets, ex.Weight); err != nil {
 			var pgErr *pgconn.PgError
 			if errors.As(err, &pgErr) && (pgErr.Code == "23503" || pgErr.Code == "22P02") { // foreign key violation or invalid input syntax
 				return "", ErrIncorrectExerciseReferenced
@@ -123,4 +127,23 @@ func createUpdateQuery(workoutId string, exercise model.WorkoutExercise, mask *f
 	query += " " + strings.Join(modifications, ", ") + " WHERE workout_id = $" + strconv.Itoa(index) + " AND exercise_id = $" + strconv.Itoa(index+1)
 	args = append(args, workoutId, exercise.ExerciseID)
 	return query, args
+}
+
+func (p *PostgresDb) GetWorkouts(userId string) ([]model.Workout, error) {
+	rows, err := p.db.Query(context.Background(), selectWorkoutsByUserIdQuery, userId)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var workouts []model.Workout
+	for rows.Next() {
+		var workout model.Workout
+		err := rows.Scan(&workout.ID, &workout.OwnerID, &workout.Name)
+		if err != nil {
+			return nil, err
+		}
+		workouts = append(workouts, workout)
+	}
+	log.Printf("workouts: %v", workouts)
+	return workouts, nil
 }

@@ -26,7 +26,7 @@ func main() {
 	}
 	defer lis.Close()
 
-	s := grpc.NewServer(grpc.UnaryInterceptor(authorization.Interceptor))
+	s := grpc.NewServer(grpc.UnaryInterceptor(authorization.UnaryInterceptor))
 	workout.RegisterExerciseServiceServer(s, exerciseAPI)
 	workout.RegisterWorkoutServiceServer(s, workoutAPI)
 

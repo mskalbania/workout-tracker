@@ -26,6 +26,12 @@ service WorkoutService {
       body: "exercise" //it will automatically populate field mask paths
     };
   }
+  rpc ListWorkouts(google.protobuf.Empty) returns (ListWorkoutsResponse) {
+    option (google.api.http) = {
+      get: "/v1/workouts"
+      response_body: "workouts"
+    };
+  }
 }
 
 message GetExercisesRequest {
@@ -57,6 +63,16 @@ message CreateWorkoutResponse {
 message UpdateWorkoutRequest {
   WorkoutExercise exercise = 1;
   google.protobuf.FieldMask update_mask = 2;
+}
+
+message ListWorkoutsResponse {
+  repeated Workout workouts = 1;
+}
+
+message Workout {
+  string id = 1;
+  string name = 2;
+  repeated WorkoutExercise exercises = 3;
 }
 
 message WorkoutExercise {

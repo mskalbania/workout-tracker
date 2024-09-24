@@ -23,6 +23,7 @@ var (
 	requiresAuth          = []string{
 		"/WorkoutService/CreateWorkout",
 		"/WorkoutService/UpdateWorkoutExercise",
+		"/WorkoutService/ListWorkouts",
 	}
 )
 
@@ -34,24 +35,32 @@ func NewAuthorization(signingKey string) *Authorization {
 	return &Authorization{[]byte(signingKey)}
 }
 
-func (a *Authorization) Interceptor(ctx context.Context, rq any, i *grpc.UnaryServerInfo, h grpc.UnaryHandler) (interface{}, error) {
+func (a *Authorization) UnaryInterceptor(ctx context.Context, rq any, i *grpc.UnaryServerInfo, h grpc.UnaryHandler) (interface{}, error) {
 	if slices.Contains(requiresAuth, i.FullMethod) {
-		md, ok := metadata.FromIncomingContext(ctx)
-		if !ok {
-			log.Println("error getting metadata from context")
-			return nil, status.Errorf(codes.InvalidArgument, "missing metadata")
-		}
-		authHeader := md["authorization"]
-		if len(authHeader) == 0 {
-			return nil, errMissingToken
-		}
-		userId, err := parseJWT(authHeader[0], a.SigningKey)
+		userId, err := readUserId(ctx, a.SigningKey)
 		if err != nil {
 			return nil, err
 		}
 		ctx = context.WithValue(ctx, userIdCtxKey, userId)
 	}
 	return h(ctx, rq)
+}
+
+func readUserId(ctx context.Context, signingKey []byte) (string, error) {
+	md, ok := metadata.FromIncomingContext(ctx)
+	if !ok {
+		log.Println("error getting metadata from context")
+		return "", status.Errorf(codes.InvalidArgument, "missing metadata")
+	}
+	authHeader := md["authorization"]
+	if len(authHeader) == 0 {
+		return "", errMissingToken
+	}
+	userId, err := parseJWT(authHeader[0], signingKey)
+	if err != nil {
+		return "", err
+	}
+	return userId, nil
 }
 
 func GetUserId(ctx context.Context) (string, error) {

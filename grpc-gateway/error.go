@@ -13,7 +13,7 @@ type Error struct {
 	Details []any  `json:"details,omitempty"`
 }
 
-func ErrorHandler(_ context.Context, _ *runtime.ServeMux, m runtime.Marshaler, w http.ResponseWriter, _ *http.Request, err error) {
+func UnaryErrorHandler(_ context.Context, _ *runtime.ServeMux, m runtime.Marshaler, w http.ResponseWriter, _ *http.Request, err error) {
 	grpcStatus, _ := status.FromError(err)
 	customError := Error{
 		Message: grpcStatus.Message(),

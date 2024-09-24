@@ -6,6 +6,7 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/grpclog"
+	"google.golang.org/protobuf/encoding/protojson"
 	"log"
 	"net/http"
 	"os"
@@ -29,7 +30,10 @@ func main() {
 	grpclog.SetLoggerV2(grpclog.NewLoggerV2(os.Stdout, os.Stdout, os.Stdout))
 
 	mux := runtime.NewServeMux(
-		runtime.WithErrorHandler(ErrorHandler),
+		runtime.WithErrorHandler(UnaryErrorHandler),
+		runtime.WithMarshalerOption(runtime.MIMEWildcard, &runtime.JSONPb{
+			MarshalOptions: protojson.MarshalOptions{EmitUnpopulated: false},
+		}),
 	)
 	opts := []grpc.DialOption{grpc.WithTransportCredentials(insecure.NewCredentials())}
 	err := auth.RegisterAuthorizationServiceHandlerFromEndpoint(context.Background(), mux, authSrvcAddr, opts)

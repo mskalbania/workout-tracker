@@ -26,13 +26,13 @@ CREATE INDEX workout_owner_index ON workout ("owner");
 
 CREATE TABLE workout_exercise
 (
-    id          SERIAL PRIMARY KEY,
-    workout_id  uuid NOT NULL REFERENCES workout (id) ON DELETE CASCADE,
-    exercise_id uuid NOT NULL REFERENCES exercise (id),
-    "order"     int  NOT NULL,
-    repetitions int  NOT NULL,
-    sets        int  NOT NULL,
-    weight      DECIMAL(5, 2)
+    workout_exercise_id uuid PRIMARY KEY,
+    workout_id          uuid NOT NULL REFERENCES workout (id) ON DELETE CASCADE,
+    exercise_id         uuid NOT NULL REFERENCES exercise (id),
+    "order"             int  NOT NULL,
+    repetitions         int  NOT NULL,
+    sets                int  NOT NULL,
+    weight              DECIMAL(5, 2)
 );
 
 CREATE INDEX workout_exercise_workout_id_index ON workout_exercise (workout_id);
@@ -63,6 +63,8 @@ VALUES ('87df312d-36e0-40e8-915e-093ac3342ac8', 'Bench Press',
 INSERT INTO workout (id, name, "owner")
 VALUES ('70ce52c7-5a3d-44c9-a34b-6d8a4d2316db', 'Chest Day', '4ff474ac-fb48-4bbc-8527-f7a3a44667c8');
 
-INSERT INTO workout_exercise (workout_id, exercise_id, "order", repetitions, sets, weight)
-VALUES ('70ce52c7-5a3d-44c9-a34b-6d8a4d2316db', '87df312d-36e0-40e8-915e-093ac3342ac8', 1, 10, 3, 100),
-       ('70ce52c7-5a3d-44c9-a34b-6d8a4d2316db', '94b4109b-25ba-4519-8aa7-6adef75c0d37', 2, 10, 3, null);
+INSERT INTO workout_exercise (workout_exercise_id, workout_id, exercise_id, "order", repetitions, sets, weight)
+VALUES ('70ce52c7-5a3d-44c9-a34b-6d8a4d2316dd', '70ce52c7-5a3d-44c9-a34b-6d8a4d2316db',
+        '87df312d-36e0-40e8-915e-093ac3342ac8', 1, 10, 3, 100),
+       ('70ce52c7-5a3d-44c9-a34b-6d8a4d2326dd', '70ce52c7-5a3d-44c9-a34b-6d8a4d2316db',
+        '94b4109b-25ba-4519-8aa7-6adef75c0d37', 2, 10, 3, null);
