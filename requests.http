@@ -1,22 +1,32 @@
-#GoLand inbuilt HTTP client request collection
-GRPC localhost:8080/AuthorizationService/Register
-
-{
-  "username": "ghost",
-  "password": "qwerty"
-}
-
-###
-POST localhost:8888/v1/auth/register
+###REST Collection - goes through grpc-gateway
+POST localhost:8080/v1/auth/register
 Content-Type: application/json
 
 {
   "username": "ghost",
   "password": "qwerty"
 }
-
 ###
-GRPC localhost:8080/AuthorizationService/Login
+POST localhost:8080/v1/auth/login
+Content-Type: application/json
+
+{
+  "username": "ghost",
+  "password": "qwerty"
+}
+> {%
+    client.global.set("token", response.body.token);
+%}
+
+###GRPC Collection (requires exposing ports in docker-compose)
+GRPC localhost:8081/AuthorizationService/Register
+
+{
+  "username": "ghost",
+  "password": "qwerty"
+}
+###
+GRPC localhost:8081/AuthorizationService/Login
 
 {
   "username": "ghost",
@@ -28,16 +38,7 @@ GRPC localhost:8080/AuthorizationService/Login
 %}
 
 ###
-POST localhost:8888/v1/auth/login
-Content-Type: application/json
-
-{
-  "username": "ghost",
-  "password": "qwerty"
-}
-
-###
-GRPC localhost:8081/ExerciseService/GetExercises
+GRPC localhost:8082/ExerciseService/GetExercises
 
 {
   "muscle_group_filter": "Back",
@@ -45,7 +46,7 @@ GRPC localhost:8081/ExerciseService/GetExercises
 }
 
 ###
-GRPC localhost:8081/WorkoutService/CreateWorkout
+GRPC localhost:8082/WorkoutService/CreateWorkout
 Authorization: Bearer {{token}}
 
 {

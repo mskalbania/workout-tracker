@@ -12,8 +12,9 @@ services:
     build:
       context: .
       dockerfile: authorization-server/Dockerfile
-    ports:
-      - "8080:8080"
+    # uncomment to allow direct access
+    #    ports:
+    #      - "8081:8080"
     environment:
       - LISTEN_ADDR=:8080
       - JWT_SIGNING_KEY=some-local-secret
@@ -25,11 +26,25 @@ services:
     build:
       context: .
       dockerfile: workout-tracker-server/Dockerfile
-    ports:
-      - "8081:8080"
+    # uncomment to allow direct access
+    #    ports:
+    #      - "8082:8080"
     environment:
       - LISTEN_ADDR=:8080
       - JWT_SIGNING_KEY=some-local-secret
       - DB_CONN_STRING=postgresql://postgres:postgres@postgres:5432/postgres
     depends_on:
       - postgres
+  grpc-gateway:
+    container_name: grpc-gateway
+    build:
+      context: .
+      dockerfile: grpc-gateway/Dockerfile
+    ports:
+      - "8080:8080"
+    environment:
+      - LISTEN_ADDR=:8080
+      - AUTH_SERVER_ADDR=authorization-server:8080
+    depends_on:
+      - workout-tracker-server
+      - authorization-server

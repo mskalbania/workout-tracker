@@ -33,7 +33,7 @@ func NewAuthorizationAPI(userDb db.UserDb, properties JWTProperties) *Authorizat
 func (a *AuthorizationAPI) Register(ctx context.Context, rq *auth.RegisterRequest) (*auth.RegisterResponse, error) {
 	_, err := a.userDb.Find(rq.Username)
 	if err == nil {
-		return nil, status.Error(codes.AlreadyExists, "user already exists")
+		return nil, status.Error(codes.InvalidArgument, "user already exists")
 	}
 	if errors.Is(err, db.ErrUserNotFound) {
 		hashedPassword, err := hashPassword(rq.Password)
