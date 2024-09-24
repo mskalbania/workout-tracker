@@ -1,6 +1,7 @@
 package main
 
 import (
+	_ "google.golang.org/genproto/googleapis/api"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 	"log"

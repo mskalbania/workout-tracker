@@ -45,6 +45,7 @@ services:
     environment:
       - LISTEN_ADDR=:8080
       - AUTH_SERVER_ADDR=authorization-server:8080
+      - WORKOUT_SERVER_ADDR=workout-tracker-server:8080
     depends_on:
       - workout-tracker-server
       - authorization-server

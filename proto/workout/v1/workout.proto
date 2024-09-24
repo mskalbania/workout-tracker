@@ -1,12 +1,23 @@
 syntax = "proto3";
 option go_package = "./generated";
 
+import "google/api/annotations.proto";
+
 service ExerciseService {
-  rpc GetExercises(GetExercisesRequest) returns (GetExercisesResponse) {}
+  rpc GetExercises(GetExercisesRequest) returns (GetExercisesResponse) {
+    option (google.api.http) = {
+      get: "/v1/exercises"
+    };
+  }
 }
 
 service WorkoutService {
-  rpc CreateWorkout(CreateWorkoutRequest) returns (CreateWorkoutResponse) {}
+  rpc CreateWorkout(CreateWorkoutRequest) returns (CreateWorkoutResponse) {
+    option (google.api.http) = {
+      post: "/v1/workouts"
+      body: "*"
+    };
+  }
 }
 
 message GetExercisesRequest {
