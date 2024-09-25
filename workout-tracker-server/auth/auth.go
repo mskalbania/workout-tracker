@@ -20,10 +20,8 @@ var (
 	errMissingToken       = status.Errorf(codes.Unauthenticated, "missing token")
 	errExpiredToken       = status.Errorf(codes.Unauthenticated, "invalid token - expired")
 	errMissingClaims      = status.Errorf(codes.Unauthenticated, "invalid token - missing claims")
-	requiresAuth          = []string{
-		"/WorkoutService/CreateWorkout",
-		"/WorkoutService/UpdateWorkoutExercise",
-		"/WorkoutService/ListWorkouts",
+	excludedFormAuth      = []string{
+		"/ExerciseService/GetExercises",
 	}
 )
 
@@ -36,7 +34,7 @@ func NewAuthorization(signingKey string) *Authorization {
 }
 
 func (a *Authorization) UnaryInterceptor(ctx context.Context, rq any, i *grpc.UnaryServerInfo, h grpc.UnaryHandler) (interface{}, error) {
-	if slices.Contains(requiresAuth, i.FullMethod) {
+	if !slices.Contains(excludedFormAuth, i.FullMethod) {
 		userId, err := readUserId(ctx, a.SigningKey)
 		if err != nil {
 			return nil, err

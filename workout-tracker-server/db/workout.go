@@ -8,7 +8,6 @@ import (
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
 	"google.golang.org/protobuf/types/known/fieldmaskpb"
-	"log"
 	"strconv"
 	"strings"
 	"workout-tracker-server/model"
@@ -20,16 +19,18 @@ var (
 	ErrorExerciseNotFound          = fmt.Errorf("exercise not found")
 	insertWorkoutQuery             = `INSERT INTO workout (id, owner, name) VALUES ($1, $2, $3)`
 	insertWorkoutExerciseQuery     = `INSERT INTO workout_exercise (workout_exercise_id, workout_id, exercise_id, "order", repetitions, sets, weight) VALUES ($1, $2, $3, $4, $5, $6, $7)`
-	selectWorkoutQuery             = `SELECT id, owner, name FROM workout WHERE id = $1`
+	selectWorkoutByIdQuery         = `SELECT w.id, w.owner, w.name, we.workout_exercise_id, we.exercise_id, we."order", we.repetitions, we.sets, we.weight FROM workout w JOIN workout_exercise we ON w.id = we.workout_id WHERE workout_id = $1;`
 	updateWorkoutExerciseQuery     = `UPDATE workout_exercise SET`
 	selectWorkoutsByUserIdQuery    = `SELECT id, owner, name FROM workout WHERE owner = $1`
+	selectWorkoutOwnerQuery        = `SELECT owner FROM workout WHERE id = $1`
 )
 
 type WorkoutDb interface {
 	SaveWorkout(workout model.Workout) (string, error)
-	GetWorkout(id string) (model.Workout, error)
-	UpdateWorkoutExercise(workoutId string, exercise model.WorkoutExercise, mask *fieldmaskpb.FieldMask) error
+	UpdateWorkoutExercise(exercise model.WorkoutExercise, mask *fieldmaskpb.FieldMask) error
 	GetWorkouts(userId string) ([]model.Workout, error)
+	GetWorkout(id string) (model.Workout, error)
+	IsWorkoutOwner(workoutId, userId string) (bool, error)
 }
 
 func (p *PostgresDb) SaveWorkout(workout model.Workout) (string, error) {
@@ -62,20 +63,41 @@ func (p *PostgresDb) SaveWorkout(workout model.Workout) (string, error) {
 	return workoutId, nil
 }
 
+func (p *PostgresDb) IsWorkoutOwner(workoutId, userId string) (bool, error) {
+	row := p.db.QueryRow(context.Background(), selectWorkoutOwnerQuery, workoutId)
+	var owner string
+	if err := row.Scan(&owner); err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return false, ErrWorkoutNotFound
+		}
+		return false, err
+	}
+	return owner == userId, nil
+}
+
 func (p *PostgresDb) GetWorkout(id string) (model.Workout, error) {
-	row := p.db.QueryRow(context.Background(), selectWorkoutQuery, id)
-	var workout model.Workout
-	if err := row.Scan(&workout.ID, &workout.OwnerID, &workout.Name); err != nil {
+	rows, err := p.db.Query(context.Background(), selectWorkoutByIdQuery, id)
+	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return model.Workout{}, ErrWorkoutNotFound
 		}
 		return model.Workout{}, err
 	}
+	defer rows.Close()
+	var workout model.Workout
+	for rows.Next() {
+		var exercise model.WorkoutExercise
+		err := rows.Scan(&workout.ID, &workout.OwnerID, &workout.Name, &exercise.WorkoutExerciseID, &exercise.ExerciseID, &exercise.Order, &exercise.Repetitions, &exercise.Sets, &exercise.Weight)
+		if err != nil {
+			return model.Workout{}, err
+		}
+		workout.Exercises = append(workout.Exercises, exercise)
+	}
 	return workout, nil
 }
 
-func (p *PostgresDb) UpdateWorkoutExercise(workoutId string, exercise model.WorkoutExercise, mask *fieldmaskpb.FieldMask) error {
-	query, args := createUpdateQuery(workoutId, exercise, mask)
+func (p *PostgresDb) UpdateWorkoutExercise(exercise model.WorkoutExercise, mask *fieldmaskpb.FieldMask) error {
+	query, args := createUpdateQuery(exercise, mask)
 	if query == "" { // no fields to update
 		return nil
 	}
@@ -93,7 +115,7 @@ func (p *PostgresDb) UpdateWorkoutExercise(workoutId string, exercise model.Work
 	return nil
 }
 
-func createUpdateQuery(workoutId string, exercise model.WorkoutExercise, mask *fieldmaskpb.FieldMask) (string, []any) {
+func createUpdateQuery(exercise model.WorkoutExercise, mask *fieldmaskpb.FieldMask) (string, []any) {
 	if mask == nil {
 		return "", nil
 	}
@@ -124,8 +146,8 @@ func createUpdateQuery(workoutId string, exercise model.WorkoutExercise, mask *f
 	if len(modifications) == 0 {
 		return "", nil
 	}
-	query += " " + strings.Join(modifications, ", ") + " WHERE workout_id = $" + strconv.Itoa(index) + " AND exercise_id = $" + strconv.Itoa(index+1)
-	args = append(args, workoutId, exercise.ExerciseID)
+	query += " " + strings.Join(modifications, ", ") + " WHERE workout_exercise_id = $" + strconv.Itoa(index)
+	args = append(args, exercise.WorkoutExerciseID)
 	return query, args
 }
 
@@ -144,6 +166,5 @@ func (p *PostgresDb) GetWorkouts(userId string) ([]model.Workout, error) {
 		}
 		workouts = append(workouts, workout)
 	}
-	log.Printf("workouts: %v", workouts)
 	return workouts, nil
 }

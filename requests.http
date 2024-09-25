@@ -40,7 +40,7 @@ Content-Type: application/json
 }
 
 ###
-PATCH localhost:8080/v1/workouts/6707337d-6871-4c9f-abfe-a59e09396463/exercises/94b4109b-25ba-4519-8aa7-6adef75c0d37
+PATCH localhost:8080/v1/workouts/3945c6d1-0d6f-4865-b64b-1d009adcb3c7/workout-exercises/b647a8f1-8a4a-4583-ac45-d4f6ae78ad10
 Authorization: Bearer {{token}}
 Content-Type: application/json
 
@@ -53,6 +53,9 @@ Content-Type: application/json
 GET localhost:8080/v1/workouts
 Authorization: Bearer {{token}}
 
+###
+GET localhost:8080/v1/workouts/3945c6d1-0d6f-4865-b64b-1d009adcb3c7
+Authorization: Bearer {{token}}
 
 ###GRPC Collection (requires exposing ports in docker-compose)
 GRPC localhost:8081/AuthorizationService/Register
@@ -115,3 +118,11 @@ Authorization: Bearer {{token}}
 ###
 GRPC localhost:8082/WorkoutService/ListWorkouts
 Authorization: Bearer {{token}}
+
+###
+GRPC localhost:8082/WorkoutService/GetWorkout
+Authorization: Bearer {{token}}
+
+{
+  "id": "3945c6d1-0d6f-4865-b64b-1d009adcb3c7"
+}

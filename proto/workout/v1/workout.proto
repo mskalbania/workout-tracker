@@ -22,7 +22,7 @@ service WorkoutService {
   }
   rpc UpdateWorkoutExercise(UpdateWorkoutRequest) returns (google.protobuf.Empty) {
     option (google.api.http) = {
-      patch: "/v1/workouts/{exercise.workout_id}/exercises/{exercise.exercise_id}"
+      patch: "/v1/workouts/{exercise.workout_id}/workout-exercises/{exercise.workout_exercise_id}"
       body: "exercise" //it will automatically populate field mask paths
     };
   }
@@ -30,6 +30,12 @@ service WorkoutService {
     option (google.api.http) = {
       get: "/v1/workouts"
       response_body: "workouts"
+    };
+  }
+  rpc GetWorkout(GetWorkoutRequest) returns (GetWorkoutResponse) {
+    option (google.api.http) = {
+      get: "/v1/workouts/{id}"
+      response_body: "workout"
     };
   }
 }
@@ -69,6 +75,14 @@ message ListWorkoutsResponse {
   repeated Workout workouts = 1;
 }
 
+message GetWorkoutRequest {
+  string id = 1;
+}
+
+message GetWorkoutResponse {
+  Workout workout = 1;
+}
+
 message Workout {
   string id = 1;
   string name = 2;
@@ -77,10 +91,12 @@ message Workout {
 
 message WorkoutExercise {
   // Output only.
-  string workout_id = 1;
-  string exercise_id = 2;
-  int32 order = 3;
-  int32 repetitions = 4;
-  int32 sets = 5;
-  optional int32 weight = 6;
+  string workout_exercise_id = 1;
+  // Output only.
+  string workout_id = 2;
+  string exercise_id = 3;
+  int32 order = 4;
+  int32 repetitions = 5;
+  int32 sets = 6;
+  optional int32 weight = 7;
 }
