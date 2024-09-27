@@ -20,7 +20,7 @@ func main() {
 		SigningKey:           []byte(appConf.jwtSignKey),
 		AccessTokenDuration:  15 * time.Minute,
 		RefreshTokenDuration: 24 * time.Hour,
-	})
+	}, api.UTCTimeProvider{})
 
 	lis, err := net.Listen("tcp", appConf.listenAddr)
 	if err != nil {

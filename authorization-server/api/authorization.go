@@ -22,12 +22,13 @@ type JWTProperties struct {
 
 type AuthorizationAPI struct {
 	auth.UnimplementedAuthorizationServiceServer
-	userDb     db.UserDb
-	properties JWTProperties
+	userDb       db.UserDb
+	properties   JWTProperties
+	timeProvider TimeProvider
 }
 
-func NewAuthorizationAPI(userDb db.UserDb, properties JWTProperties) *AuthorizationAPI {
-	return &AuthorizationAPI{userDb: userDb, properties: properties}
+func NewAuthorizationAPI(userDb db.UserDb, properties JWTProperties, timeProvider TimeProvider) *AuthorizationAPI {
+	return &AuthorizationAPI{userDb: userDb, properties: properties, timeProvider: timeProvider}
 }
 
 func (a *AuthorizationAPI) Register(ctx context.Context, rq *auth.RegisterRequest) (*auth.RegisterResponse, error) {
@@ -79,7 +80,7 @@ func (a *AuthorizationAPI) Login(ctx context.Context, rq *auth.LoginRequest) (*a
 	if invalid != nil {
 		return nil, status.Error(codes.Unauthenticated, "invalid credentials")
 	}
-	accessToken, err := generateJWT(user.Id, a.properties)
+	accessToken, err := generateJWT(user.Id, a.properties, a.timeProvider)
 	if err != nil {
 		return nil, status.Error(codes.Internal, "error generating access token")
 	}
@@ -88,11 +89,11 @@ func (a *AuthorizationAPI) Login(ctx context.Context, rq *auth.LoginRequest) (*a
 	}, nil
 }
 
-func generateJWT(userId string, properties JWTProperties) (string, error) {
+func generateJWT(userId string, properties JWTProperties, timeProvider TimeProvider) (string, error) {
 	claims := jwt.RegisteredClaims{
 		Subject:   userId,
-		IssuedAt:  jwt.NewNumericDate(time.Now()),
-		ExpiresAt: jwt.NewNumericDate(time.Now().Add(properties.AccessTokenDuration)),
+		IssuedAt:  jwt.NewNumericDate(timeProvider.Now()),
+		ExpiresAt: jwt.NewNumericDate(timeProvider.Now().Add(properties.AccessTokenDuration)),
 	}
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	signedToken, err := token.SignedString(properties.SigningKey)
