@@ -29,6 +29,7 @@ Content-Type: application/json
 
 {
   "name": "Back Day",
+  "comment": "Do it as fast as you can",
   "exercises": [
     {
       "exercise_id": "94b4109b-25ba-4519-8aa7-6adef75c0d37",
@@ -45,7 +46,7 @@ Content-Type: application/json
 %}
 
 ###
-PATCH localhost:8080/v1/workouts/{{new_workout_id}}/workout-exercises/bdfdbe04-3d62-4d47-8232-3ec71f4693dd
+PATCH localhost:8080/v1/workouts/{{new_workout_id}}/workout-exercises/9401538e-b5c3-4cad-a35b-4140caae3212
 Authorization: Bearer {{token}}
 Content-Type: application/json
 
@@ -62,6 +63,16 @@ Authorization: Bearer {{token}}
 ###
 GET localhost:8080/v1/workouts/{{new_workout_id}}
 Authorization: Bearer {{token}}
+
+###
+PATCH localhost:8080/v1/workouts/{{new_workout_id}}
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "name": "Leg or Back Day",
+  "comment": "Morning workout"
+}
 
 ###GRPC Collection (requires exposing ports in docker-compose)
 GRPC localhost:8081/AuthorizationService/Register

@@ -13,33 +13,6 @@ service ExerciseService {
   }
 }
 
-service WorkoutService {
-  rpc CreateWorkout(CreateWorkoutRequest) returns (CreateWorkoutResponse) {
-    option (google.api.http) = {
-      post: "/v1/workouts"
-      body: "*"
-    };
-  }
-  rpc UpdateWorkoutExercise(UpdateWorkoutRequest) returns (google.protobuf.Empty) {
-    option (google.api.http) = {
-      patch: "/v1/workouts/{exercise.workout_id}/workout-exercises/{exercise.workout_exercise_id}"
-      body: "exercise" //it will automatically populate field mask paths
-    };
-  }
-  rpc ListWorkouts(google.protobuf.Empty) returns (ListWorkoutsResponse) {
-    option (google.api.http) = {
-      get: "/v1/workouts"
-      response_body: "workouts"
-    };
-  }
-  rpc GetWorkout(GetWorkoutRequest) returns (GetWorkoutResponse) {
-    option (google.api.http) = {
-      get: "/v1/workouts/{id}"
-      response_body: "workout"
-    };
-  }
-}
-
 message GetExercisesRequest {
   optional string muscle_group_filter = 1;
   optional string category_filter = 2;
@@ -57,22 +30,47 @@ message Exercise {
   string category = 5;
 }
 
+service WorkoutService {
+  //workout API
+  rpc CreateWorkout(CreateWorkoutRequest) returns (CreateWorkoutResponse) {
+    option (google.api.http) = {
+      post: "/v1/workouts"
+      body: "workout"
+    };
+  }
+  rpc GetWorkout(GetWorkoutRequest) returns (GetWorkoutResponse) {
+    option (google.api.http) = {
+      get: "/v1/workouts/{id}"
+      response_body: "workout"
+    };
+  }
+  rpc UpdateWorkout(UpdateWorkoutRequest) returns (google.protobuf.Empty) {
+    option (google.api.http) = {
+      patch: "/v1/workouts/{workout.id}"
+      body: "workout"
+    };
+  }
+  rpc ListWorkouts(google.protobuf.Empty) returns (ListWorkoutsResponse) {
+    option (google.api.http) = {
+      get: "/v1/workouts"
+      response_body: "workouts"
+    };
+  }
+  //workout-exercise API
+  rpc UpdateWorkoutExercise(UpdateWorkoutExerciseRequest) returns (google.protobuf.Empty) {
+    option (google.api.http) = {
+      patch: "/v1/workouts/{exercise.workout_id}/workout-exercises/{exercise.workout_exercise_id}"
+      body: "exercise" //it will automatically populate field mask paths
+    };
+  }
+}
+
 message CreateWorkoutRequest {
-  string name = 1;
-  repeated WorkoutExercise exercises = 2;
+  Workout workout = 1;
 }
 
 message CreateWorkoutResponse {
   string id = 1;
-}
-
-message UpdateWorkoutRequest {
-  WorkoutExercise exercise = 1;
-  google.protobuf.FieldMask update_mask = 2;
-}
-
-message ListWorkoutsResponse {
-  repeated Workout workouts = 1;
 }
 
 message GetWorkoutRequest {
@@ -83,10 +81,26 @@ message GetWorkoutResponse {
   Workout workout = 1;
 }
 
+message UpdateWorkoutRequest {
+  Workout workout = 1;
+  google.protobuf.FieldMask update_mask = 2;
+}
+
+message ListWorkoutsResponse {
+  repeated Workout workouts = 1;
+}
+
 message Workout {
+  // Output only.
   string id = 1;
   string name = 2;
-  repeated WorkoutExercise exercises = 3;
+  optional string comment = 3;
+  repeated WorkoutExercise exercises = 4;
+}
+
+message UpdateWorkoutExerciseRequest {
+  WorkoutExercise exercise = 1;
+  google.protobuf.FieldMask update_mask = 2;
 }
 
 message WorkoutExercise {

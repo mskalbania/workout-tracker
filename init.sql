@@ -19,7 +19,8 @@ CREATE TABLE workout
 (
     id      uuid PRIMARY KEY,
     name    VARCHAR(255) NOT NULL,
-    "owner" uuid         NOT NULL
+    "owner" uuid NOT NULL,
+    comment TEXT
 );
 
 CREATE INDEX workout_owner_index ON workout ("owner");
@@ -46,26 +47,3 @@ CREATE TABLE workout_schedule
     plan        uuid      NOT NULL REFERENCES workout (id) On DELETE CASCADE,
     scheduledAt TIMESTAMP NOT NULL
 );
-
-INSERT INTO "user" (id, email, password_hash)
-VALUES ('4ff474ac-fb48-4bbc-8527-f7a3a44667c8', 'ghost',
-        '$2a$10$xL1zMYlzqIpWfmEW/gzO9..3gik3RKxkty3Fpqh8YuXlLJve/9LNG');
-
-INSERT INTO exercise (id, name, description, category, muscle_group)
-VALUES ('87df312d-36e0-40e8-915e-093ac3342ac8', 'Bench Press',
-        'The bench press is an upper-body weight training exercise.', 'STRENGTH', 'CHEST'),
-       ('c3339fa8-f9d6-481d-b983-f9cdc24ca4d0', 'Squat',
-        'The squat is a lower body exercise.', 'STRENGTH', 'LEGS'),
-       ('94b4109b-25ba-4519-8aa7-6adef75c0d37', 'Pull-up',
-        'A pull-up is an upper-body strength exercise.', 'STRENGTH', 'BACK'),
-       ('66a27a50-191d-4338-a6b9-59366b9c423c', 'Push-up',
-        'A push-up is a common calisthenics exercise beginning from the prone position.', 'STRENGTH', 'CHEST');
-
-INSERT INTO workout (id, name, "owner")
-VALUES ('70ce52c7-5a3d-44c9-a34b-6d8a4d2316db', 'Chest Day', '4ff474ac-fb48-4bbc-8527-f7a3a44667c8');
-
-INSERT INTO workout_exercise (workout_exercise_id, workout_id, exercise_id, "order", repetitions, sets, weight)
-VALUES ('70ce52c7-5a3d-44c9-a34b-6d8a4d2316dd', '70ce52c7-5a3d-44c9-a34b-6d8a4d2316db',
-        '87df312d-36e0-40e8-915e-093ac3342ac8', 1, 10, 3, 100),
-       ('70ce52c7-5a3d-44c9-a34b-6d8a4d2326dd', '70ce52c7-5a3d-44c9-a34b-6d8a4d2316db',
-        '94b4109b-25ba-4519-8aa7-6adef75c0d37', 2, 10, 3, null);
