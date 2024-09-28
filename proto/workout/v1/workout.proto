@@ -56,6 +56,11 @@ service WorkoutService {
       response_body: "workouts"
     };
   }
+  rpc DeleteWorkout(DeleteWorkoutRequest) returns (google.protobuf.Empty) {
+    option (google.api.http) = {
+      delete: "/v1/workouts/{id}"
+    };
+  }
   //workout-exercise API
   rpc UpdateWorkoutExercise(UpdateWorkoutExerciseRequest) returns (google.protobuf.Empty) {
     option (google.api.http) = {
@@ -88,6 +93,10 @@ message UpdateWorkoutRequest {
 
 message ListWorkoutsResponse {
   repeated Workout workouts = 1;
+}
+
+message DeleteWorkoutRequest {
+  string id = 1;
 }
 
 message Workout {

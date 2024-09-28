@@ -24,6 +24,7 @@ var (
 	updateWorkoutQuery             = `UPDATE workout SET`
 	selectWorkoutsByUserIdQuery    = `SELECT id, owner, name, comment FROM workout WHERE owner = $1`
 	selectWorkoutOwnerQuery        = `SELECT owner FROM workout WHERE id = $1`
+	deleteWorkoutQuery             = `DELETE FROM workout WHERE id = $1`
 )
 
 type WorkoutDb interface {
@@ -33,6 +34,7 @@ type WorkoutDb interface {
 	GetWorkout(id string) (model.Workout, error)
 	IsWorkoutOwner(workoutId, userId string) (bool, error)
 	UpdateWorkout(workout model.Workout, mask *fieldmaskpb.FieldMask) error
+	DeleteWorkout(id string) error
 }
 
 func (p *PostgresDb) SaveWorkout(workout model.Workout) (string, error) {
@@ -216,4 +218,12 @@ func (p *PostgresDb) GetWorkouts(userId string) ([]model.Workout, error) {
 		workouts = append(workouts, workout)
 	}
 	return workouts, nil
+}
+
+func (p *PostgresDb) DeleteWorkout(id string) error {
+	_, err := p.db.Exec(context.Background(), deleteWorkoutQuery, id)
+	if err != nil {
+		return err
+	}
+	return nil
 }

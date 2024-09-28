@@ -46,17 +46,6 @@ Content-Type: application/json
 %}
 
 ###
-PATCH localhost:8080/v1/workouts/{{new_workout_id}}/workout-exercises/9401538e-b5c3-4cad-a35b-4140caae3212
-Authorization: Bearer {{token}}
-Content-Type: application/json
-
-{
-  "order": 333,
-  "repetitions": 333,
-  "comment": "Do it fast"
-}
-
-###
 GET localhost:8080/v1/workouts
 Authorization: Bearer {{token}}
 
@@ -72,6 +61,21 @@ Content-Type: application/json
 {
   "name": "Leg or Back Day",
   "comment": "Morning workout"
+}
+
+###
+DELETE localhost:8080/v1/workouts/{{new_workout_id}}
+Authorization: Bearer {{token}}
+
+###
+PATCH localhost:8080/v1/workouts/{{new_workout_id}}/workout-exercises/9401538e-b5c3-4cad-a35b-4140caae3212
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "order": 333,
+  "repetitions": 333,
+  "comment": "Do it fast"
 }
 
 ###GRPC Collection (requires exposing ports in docker-compose)

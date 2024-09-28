@@ -43,58 +43,18 @@ func (w *WorkoutAPI) CreateWorkout(ctx context.Context, rq *workout.CreateWorkou
 }
 
 func (w *WorkoutAPI) UpdateWorkout(ctx context.Context, rq *workout.UpdateWorkoutRequest) (*emptypb.Empty, error) {
-	uuid, err := auth.GetUserId(ctx)
-	if err != nil {
-		return nil, status.Error(codes.Internal, "user id not found in context")
+	if err := w.validateWorkoutOwner(ctx, rq.Workout.Id); err != nil {
+		return nil, err
 	}
-	isOwner, err := w.db.IsWorkoutOwner(rq.Workout.Id, uuid)
-	if errors.Is(err, db.ErrWorkoutNotFound) {
-		return nil, status.Error(codes.NotFound, "workout not found")
-	}
-	if err != nil {
-		log.Printf("error getting workout data: %v", err)
-		return nil, status.Error(codes.Internal, "error getting workout data")
-	}
-	if !isOwner {
-		return nil, status.Error(codes.PermissionDenied, "access forbidden")
-	}
-	err = w.db.UpdateWorkout(model.FromWorkoutProto(rq.GetWorkout()), rq.UpdateMask)
-	if err != nil {
+	if err := w.db.UpdateWorkout(model.FromWorkoutProto(rq.GetWorkout()), rq.UpdateMask); err != nil {
 		log.Printf("error updating workout: %v", err)
 		return nil, status.Error(codes.Internal, "error updating workout")
 	}
 	return &emptypb.Empty{}, nil
 }
 
-func (w *WorkoutAPI) UpdateWorkoutExercise(ctx context.Context, rq *workout.UpdateWorkoutExerciseRequest) (*emptypb.Empty, error) {
-	uuid, err := auth.GetUserId(ctx)
-	if err != nil {
-		return nil, status.Error(codes.Internal, "user id not found in context")
-	}
-	isOwner, err := w.db.IsWorkoutOwner(rq.Exercise.WorkoutId, uuid)
-	if errors.Is(err, db.ErrWorkoutNotFound) {
-		return nil, status.Error(codes.NotFound, "workout not found")
-	}
-	if err != nil {
-		log.Printf("error getting workout data: %v", err)
-		return nil, status.Error(codes.Internal, "error getting workout data")
-	}
-	if !isOwner {
-		return nil, status.Error(codes.PermissionDenied, "access forbidden")
-	}
-	err = w.db.UpdateWorkoutExercise(model.FromWorkoutExerciseProto(rq.GetExercise()), rq.UpdateMask)
-	if errors.Is(err, db.ErrorExerciseNotFound) {
-		return nil, status.Error(codes.NotFound, "exercise not found")
-	}
-	if err != nil {
-		log.Printf("error updating workout exercise: %v", err)
-		return nil, status.Error(codes.Internal, "error updating workout exercise")
-	}
-	return &emptypb.Empty{}, nil
-}
-
-func (w *WorkoutAPI) ListWorkouts(context context.Context, _ *emptypb.Empty) (*workout.ListWorkoutsResponse, error) {
-	userId, err := auth.GetUserId(context)
+func (w *WorkoutAPI) ListWorkouts(ctx context.Context, _ *emptypb.Empty) (*workout.ListWorkoutsResponse, error) {
+	userId, err := auth.GetUserId(ctx)
 	if err != nil {
 		return nil, status.Error(codes.Internal, "user id not found in context")
 	}
@@ -110,16 +70,63 @@ func (w *WorkoutAPI) ListWorkouts(context context.Context, _ *emptypb.Empty) (*w
 	return &resp, nil
 }
 
-func (w *WorkoutAPI) GetWorkout(_ context.Context, rq *workout.GetWorkoutRequest) (*workout.GetWorkoutResponse, error) {
-	wrk, err := w.db.GetWorkout(rq.Id)
-	if errors.Is(err, db.ErrWorkoutNotFound) {
-		return nil, status.Error(codes.NotFound, "workout not found")
+func (w *WorkoutAPI) GetWorkout(ctx context.Context, rq *workout.GetWorkoutRequest) (*workout.GetWorkoutResponse, error) {
+	if err := w.validateWorkoutOwner(ctx, rq.Id); err != nil {
+		return nil, err
 	}
-	if err != nil {
+	if wrk, err := w.db.GetWorkout(rq.Id); err != nil {
+		if errors.Is(err, db.ErrWorkoutNotFound) {
+			return nil, status.Error(codes.NotFound, "workout not found")
+		}
 		log.Printf("error getting workout: %v", err)
 		return nil, status.Error(codes.Internal, "error getting workout")
+	} else {
+		return &workout.GetWorkoutResponse{
+			Workout: wrk.ToProto(),
+		}, nil
 	}
-	return &workout.GetWorkoutResponse{
-		Workout: wrk.ToProto(),
-	}, nil
+}
+
+func (w *WorkoutAPI) DeleteWorkout(ctx context.Context, rq *workout.DeleteWorkoutRequest) (*emptypb.Empty, error) {
+	if err := w.validateWorkoutOwner(ctx, rq.Id); err != nil {
+		return nil, err
+	}
+	if err := w.db.DeleteWorkout(rq.Id); err != nil {
+		log.Printf("error deleting workout: %v", err)
+		return nil, status.Error(codes.Internal, "error deleting workout")
+	}
+	return &emptypb.Empty{}, nil
+}
+
+func (w *WorkoutAPI) UpdateWorkoutExercise(ctx context.Context, rq *workout.UpdateWorkoutExerciseRequest) (*emptypb.Empty, error) {
+	if err := w.validateWorkoutOwner(ctx, rq.Exercise.WorkoutExerciseId); err != nil {
+		return nil, err
+	}
+	if err := w.db.UpdateWorkoutExercise(model.FromWorkoutExerciseProto(rq.GetExercise()), rq.UpdateMask); err != nil {
+		if errors.Is(err, db.ErrorExerciseNotFound) {
+			return nil, status.Error(codes.NotFound, "exercise not found")
+		}
+		log.Printf("error updating workout exercise: %v", err)
+		return nil, status.Error(codes.Internal, "error updating workout exercise")
+	}
+	return &emptypb.Empty{}, nil
+}
+
+func (w *WorkoutAPI) validateWorkoutOwner(ctx context.Context, workoutId string) error {
+	userId, err := auth.GetUserId(ctx)
+	if err != nil {
+		return status.Error(codes.Internal, "user id not found in context")
+	}
+	isOwner, err := w.db.IsWorkoutOwner(workoutId, userId)
+	if errors.Is(err, db.ErrWorkoutNotFound) {
+		return status.Error(codes.NotFound, "workout not found")
+	}
+	if err != nil {
+		log.Printf("error getting workout data: %v", err)
+		return status.Error(codes.Internal, "error getting workout data")
+	}
+	if !isOwner {
+		return status.Error(codes.PermissionDenied, "access forbidden")
+	}
+	return nil
 }
