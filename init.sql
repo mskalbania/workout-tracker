@@ -32,7 +32,8 @@ CREATE TABLE workout_exercise
     "order"             int  NOT NULL,
     repetitions         int  NOT NULL,
     sets                int  NOT NULL,
-    weight              DECIMAL(5, 2)
+    weight  DECIMAL(5, 2),
+    comment TEXT
 );
 
 CREATE INDEX workout_exercise_workout_id_index ON workout_exercise (workout_id);

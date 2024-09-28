@@ -18,8 +18,8 @@ var (
 	ErrWorkoutNotFound             = fmt.Errorf("workout not found")
 	ErrorExerciseNotFound          = fmt.Errorf("exercise not found")
 	insertWorkoutQuery             = `INSERT INTO workout (id, owner, name) VALUES ($1, $2, $3)`
-	insertWorkoutExerciseQuery     = `INSERT INTO workout_exercise (workout_exercise_id, workout_id, exercise_id, "order", repetitions, sets, weight) VALUES ($1, $2, $3, $4, $5, $6, $7)`
-	selectWorkoutByIdQuery         = `SELECT w.id, w.owner, w.name, we.workout_exercise_id, we.exercise_id, we."order", we.repetitions, we.sets, we.weight FROM workout w JOIN workout_exercise we ON w.id = we.workout_id WHERE workout_id = $1;`
+	insertWorkoutExerciseQuery     = `INSERT INTO workout_exercise (workout_exercise_id, workout_id, exercise_id, "order", repetitions, sets, weight, comment) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`
+	selectWorkoutByIdQuery         = `SELECT w.id, w.owner, w.name, we.workout_exercise_id, we.exercise_id, we."order", we.repetitions, we.sets, we.weight, we.comment FROM workout w JOIN workout_exercise we ON w.id = we.workout_id WHERE workout_id = $1;`
 	updateWorkoutExerciseQuery     = `UPDATE workout_exercise SET`
 	selectWorkoutsByUserIdQuery    = `SELECT id, owner, name FROM workout WHERE owner = $1`
 	selectWorkoutOwnerQuery        = `SELECT owner FROM workout WHERE id = $1`
@@ -49,7 +49,7 @@ func (p *PostgresDb) SaveWorkout(workout model.Workout) (string, error) {
 	}
 	for _, ex := range workout.Exercises {
 		workoutExerciseId := uuid.New().String()
-		if _, err = tx.Exec(ctx, insertWorkoutExerciseQuery, workoutExerciseId, workoutId, ex.ExerciseID, ex.Order, ex.Repetitions, ex.Sets, ex.Weight); err != nil {
+		if _, err = tx.Exec(ctx, insertWorkoutExerciseQuery, workoutExerciseId, workoutId, ex.ExerciseID, ex.Order, ex.Repetitions, ex.Sets, ex.Weight, ex.Comment); err != nil {
 			var pgErr *pgconn.PgError
 			if errors.As(err, &pgErr) && (pgErr.Code == "23503" || pgErr.Code == "22P02") { // foreign key violation or invalid input syntax
 				return "", ErrIncorrectExerciseReferenced
@@ -87,7 +87,7 @@ func (p *PostgresDb) GetWorkout(id string) (model.Workout, error) {
 	var workout model.Workout
 	for rows.Next() {
 		var exercise model.WorkoutExercise
-		err := rows.Scan(&workout.ID, &workout.OwnerID, &workout.Name, &exercise.WorkoutExerciseID, &exercise.ExerciseID, &exercise.Order, &exercise.Repetitions, &exercise.Sets, &exercise.Weight)
+		err := rows.Scan(&workout.ID, &workout.OwnerID, &workout.Name, &exercise.WorkoutExerciseID, &exercise.ExerciseID, &exercise.Order, &exercise.Repetitions, &exercise.Sets, &exercise.Weight, &exercise.Comment)
 		if err != nil {
 			return model.Workout{}, err
 		}
@@ -140,6 +140,10 @@ func createUpdateQuery(exercise model.WorkoutExercise, mask *fieldmaskpb.FieldMa
 		case "order":
 			modifications = append(modifications, fmt.Sprintf("\"order\" = $%d", index))
 			args = append(args, exercise.Order)
+			index++
+		case "comment":
+			modifications = append(modifications, fmt.Sprintf("comment = $%d", index))
+			args = append(args, exercise.Comment)
 			index++
 		}
 	}

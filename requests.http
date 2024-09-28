@@ -34,19 +34,25 @@ Content-Type: application/json
       "exercise_id": "94b4109b-25ba-4519-8aa7-6adef75c0d37",
       "order": 1,
       "repetitions": 10,
-      "sets": 3
+      "sets": 3,
+      "weight": 50,
+      "comment": "Do it slowly"
     }
   ]
 }
+> {%
+    client.global.set("new_workout_id", response.body.id);
+%}
 
 ###
-PATCH localhost:8080/v1/workouts/3945c6d1-0d6f-4865-b64b-1d009adcb3c7/workout-exercises/b647a8f1-8a4a-4583-ac45-d4f6ae78ad10
+PATCH localhost:8080/v1/workouts/{{new_workout_id}}/workout-exercises/bdfdbe04-3d62-4d47-8232-3ec71f4693dd
 Authorization: Bearer {{token}}
 Content-Type: application/json
 
 {
   "order": 333,
-  "repetitions": 333
+  "repetitions": 333,
+  "comment": "Do it fast"
 }
 
 ###
@@ -54,7 +60,7 @@ GET localhost:8080/v1/workouts
 Authorization: Bearer {{token}}
 
 ###
-GET localhost:8080/v1/workouts/3945c6d1-0d6f-4865-b64b-1d009adcb3c7
+GET localhost:8080/v1/workouts/{{new_workout_id}}
 Authorization: Bearer {{token}}
 
 ###GRPC Collection (requires exposing ports in docker-compose)

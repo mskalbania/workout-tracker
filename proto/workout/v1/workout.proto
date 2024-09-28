@@ -99,4 +99,5 @@ message WorkoutExercise {
   int32 repetitions = 5;
   int32 sets = 6;
   optional int32 weight = 7;
+  optional string comment = 8;
 }

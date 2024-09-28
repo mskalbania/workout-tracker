@@ -18,6 +18,7 @@ type WorkoutExercise struct {
 	Repetitions       int32
 	Sets              int32
 	Weight            *int32
+	Comment           *string
 }
 
 func FromProto(proto *workout.WorkoutExercise) WorkoutExercise {
@@ -28,6 +29,7 @@ func FromProto(proto *workout.WorkoutExercise) WorkoutExercise {
 		Repetitions:       proto.Repetitions,
 		Sets:              proto.Sets,
 		Weight:            proto.Weight,
+		Comment:           proto.Comment,
 	}
 }
 
@@ -51,5 +53,6 @@ func (w WorkoutExercise) toProto() *workout.WorkoutExercise {
 		Repetitions:       w.Repetitions,
 		Sets:              w.Sets,
 		Weight:            w.Weight,
+		Comment:           w.Comment,
 	}
 }
