@@ -1,6 +1,8 @@
 *.pb.go
 *.pb.gw.go
+*.pb.validate.go
 /proto/google
+/proto/validate
 remove_gen.sh
 */mocks
 .idea

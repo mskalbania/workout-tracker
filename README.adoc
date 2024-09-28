@@ -1,7 +1,39 @@
 = workout-tracker
 
-Workout tracker gRPC implementation based on https://roadmap.sh/projects/fitness-workout-tracker
+Workout tracker REST < - > gRPC implementation based on project idea - https://roadmap.sh/projects/fitness-workout-tracker
 
+:toc:
+
+== Architecture
+
+== Stack & Tools
+
+== Setup
+
+=== Local Stack
+
+Docker compose file is provided to spin up services and dependencies.
+Run below command to start services - https://github.com/mskalbania/workout-tracker/blob/main/docker-compose.yaml[docker-compose.yaml]
+
+- grpc-gateway
+- single postgres instance
+- authorization server
+- workout tracker server
+
+After stack is ready, request collection can be used from here https://github.com/mskalbania/workout-tracker/blob/main/requests.http[requests.http] to interact with application.
+
+Contains both REST API examples hitting gateway and gRPC to directly talk to services (direct gRPC calls require uncommenting port mapping lines in docker-compose.yaml).
+
+Alternatively, happy path E2E test can be found here https://github.com/mskalbania/workout-tracker/tree/main/e2e[e2e].
+
+=== Tests
+
+To run tests locally, below steps are required:
+
+1. run `mockery --all --with-expecter` in root dir to generate mock files, this requires installing 3rd party tool mockery `brew install mockery`
+2. run `protoc-all.sh` in root dir to generate all proto code
+
+== TBD where
 * DB init script & seeder (as per exercise requirement): [db.sql](db.sql)
 * Docker compose to spin up services and dependencies: [docker-compose.yaml](docker-compose.yaml)
 * Using protoc to generate gRPC code: [proto](proto)
@@ -9,7 +41,7 @@ Workout tracker gRPC implementation based on https://roadmap.sh/projects/fitness
 
 More TODO/Ideas:
 
-* Add doc on how to run tests
+* Add doc on how to run tests - `mockery --all --with-expecter` + `protoc-all.sh`
 * Add validations, add logging
 * Add refresh tokens - currently re-login is required after access token expiry.
 * Switch to always online validation of JWT tokens and keep offline as fallback to invalidate JWT tokens on logout, currently logout = remove token from device cache. Since project is gRPC latency tradeoff could be acceptable.

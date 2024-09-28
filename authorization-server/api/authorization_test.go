@@ -22,10 +22,10 @@ import (
 )
 
 var testUserName = "user1@gmail.com"
-var testUserPassword = "password"
-var testUserPasswordHash = "$2a$10$6juW3B.g9buDT.8T/TyLLOkCqJ1Bdnbo1/CYo0k3RW7egCW8izo82"
+var testUserPassword = "password-password"
+var testUserPasswordHash = "$2a$10$3.z9YPWhIeLbfXNzxLXSmePq4WtNidWrZl7pKLjoQP/WlNvp7yBa6"
 
-type AuthorizationSuite struct {
+type AuthorizationAPISuite struct {
 	suite.Suite
 	dbMock    *mocks.UserDb
 	autClient auth.AuthorizationServiceClient
@@ -33,10 +33,10 @@ type AuthorizationSuite struct {
 }
 
 func TestAuthorizationSuite(t *testing.T) {
-	suite.Run(t, new(AuthorizationSuite))
+	suite.Run(t, new(AuthorizationAPISuite))
 }
 
-func (s *AuthorizationSuite) SetupSuite() {
+func (s *AuthorizationAPISuite) SetupSuite() {
 	dbMock := mocks.NewUserDb(s.T())
 	lis := bufconn.Listen(1024 * 1024)
 
@@ -82,17 +82,18 @@ func setupClient(t *testing.T, listener *bufconn.Listener) (auth.AuthorizationSe
 	return auth.NewAuthorizationServiceClient(client), func() { client.Close() }
 }
 
-func (s *AuthorizationSuite) TearDownSuite() {
+func (s *AuthorizationAPISuite) TearDownSuite() {
 	s.cleanup()
 }
 
-func (s *AuthorizationSuite) TestRegisterFailsUserAlreadyExists() {
+func (s *AuthorizationAPISuite) TestRegisterFailsUserAlreadyExists() {
 	//given repository returns a user
 	s.dbMock.EXPECT().Find(testUserName).Return(model.User{}, nil).Once()
 
 	//when register is called
 	rs, err := s.autClient.Register(context.Background(), &auth.RegisterRequest{
 		Username: testUserName,
+		Password: testUserPassword,
 	})
 
 	//then correct error is returned
@@ -100,13 +101,14 @@ func (s *AuthorizationSuite) TestRegisterFailsUserAlreadyExists() {
 	s.assertStatusError(codes.InvalidArgument, "user already exists", err)
 }
 
-func (s *AuthorizationSuite) TestRegisterFailsOnInternalError() {
+func (s *AuthorizationAPISuite) TestRegisterFailsOnInternalError() {
 	//given repository returns an error
 	s.dbMock.EXPECT().Find(testUserName).Return(model.User{}, errors.New("some error")).Once()
 
 	//when register is called
 	rs, err := s.autClient.Register(context.Background(), &auth.RegisterRequest{
 		Username: testUserName,
+		Password: testUserPassword,
 	})
 
 	//then correct error is returned
@@ -114,21 +116,51 @@ func (s *AuthorizationSuite) TestRegisterFailsOnInternalError() {
 	s.assertStatusError(codes.Internal, "error finding user", err)
 }
 
-func (s *AuthorizationSuite) TestRegisterFailsOnHashingPasswordError() {
-	//given no user found with given name
-	s.dbMock.EXPECT().Find(testUserName).Return(model.User{}, db.ErrUserNotFound).Once()
+func (s *AuthorizationAPISuite) TestRegisterFailsOnInvalidInput() {
+	testCases := []struct {
+		name    string
+		request *auth.RegisterRequest
+		errMsg  string
+	}{
+		{
+			"EmptyUsername",
+			&auth.RegisterRequest{Username: ""},
+			"invalid RegisterRequest.Username: value must be a valid email address",
+		},
+		{
+			"IncorrectEmailFormat",
+			&auth.RegisterRequest{Username: "invalid"},
+			"invalid RegisterRequest.Username: value must be a valid email address",
+		},
+		{
+			"EmptyPassword",
+			&auth.RegisterRequest{Username: testUserName, Password: ""},
+			"invalid RegisterRequest.Password: value length must be between 10 and 25 runes, inclusive",
+		},
+		{
+			"PasswordTooLong",
+			&auth.RegisterRequest{Username: testUserName, Password: "qwertyuiopasdfghjklzxcvbnm"},
+			"invalid RegisterRequest.Password: value length must be between 10 and 25 runes, inclusive",
+		},
+		{
+			"PasswordTooHeavy",
+			&auth.RegisterRequest{Username: testUserName, Password: "€€€€€€€€€€€€€€€€€€€€€€€€€"},
+			"invalid RegisterRequest.Password: value length must be at most 70 bytes",
+		},
+	}
+	for _, testCase := range testCases {
+		s.T().Run(testCase.name, func(t *testing.T) {
+			//when register is called
+			rs, err := s.autClient.Register(context.Background(), testCase.request)
 
-	//when register is called
-	rs, err := s.autClient.Register(context.Background(), &auth.RegisterRequest{
-		Username: testUserName,
-		//password is too long for bcrypt to handle
-		Password: "€€€€€€€€€€€€€€€€€€€€€€€€€€€€€",
-	})
-	s.Require().Nil(rs)
-	s.assertStatusError(codes.Internal, "error hashing password", err)
+			//then correct error is returned
+			s.Require().Nil(rs)
+			s.assertStatusError(codes.InvalidArgument, testCase.errMsg, err)
+		})
+	}
 }
 
-func (s *AuthorizationSuite) TestRegisterFailsOnSavingUserError() {
+func (s *AuthorizationAPISuite) TestRegisterFailsOnSavingUserError() {
 	//given no user found with given name
 	s.dbMock.EXPECT().Find(testUserName).Return(model.User{}, db.ErrUserNotFound).Once()
 	//and saving user fails
@@ -145,11 +177,11 @@ func (s *AuthorizationSuite) TestRegisterFailsOnSavingUserError() {
 	s.assertStatusError(codes.Internal, "error saving user", err)
 }
 
-func (s *AuthorizationSuite) TestRegisterSuccess() {
+func (s *AuthorizationAPISuite) TestRegisterSuccess() {
 	//given no user found with given name
 	s.dbMock.EXPECT().Find(testUserName).Return(model.User{}, db.ErrUserNotFound).Once()
 	//and saving user is successful
-	s.dbMock.EXPECT().Save(mock.Anything).Return(model.User{Id: "id"}, nil).Once()
+	s.dbMock.EXPECT().Save(mock.Anything).Return(model.User{ID: "id"}, nil).Once()
 
 	//when register is called
 	rs, err := s.autClient.Register(context.Background(), &auth.RegisterRequest{
@@ -163,7 +195,7 @@ func (s *AuthorizationSuite) TestRegisterSuccess() {
 	s.EqualValues("id", rs.UserId)
 }
 
-func (s *AuthorizationSuite) TestLoginFailsOnUserNotFound() {
+func (s *AuthorizationAPISuite) TestLoginFailsOnUserNotFound() {
 	//given repository returns an error
 	s.dbMock.EXPECT().Find(testUserName).Return(model.User{}, db.ErrUserNotFound).Once()
 
@@ -177,7 +209,7 @@ func (s *AuthorizationSuite) TestLoginFailsOnUserNotFound() {
 	s.assertStatusError(codes.Unauthenticated, "user not found", err)
 }
 
-func (s *AuthorizationSuite) TestLoginFailsOnInternalErrorFromDb() {
+func (s *AuthorizationAPISuite) TestLoginFailsOnInternalErrorFromDb() {
 	//given repository returns an error
 	s.dbMock.EXPECT().Find(testUserName).Return(model.User{}, errors.New("some error")).Once()
 
@@ -191,7 +223,7 @@ func (s *AuthorizationSuite) TestLoginFailsOnInternalErrorFromDb() {
 	s.assertStatusError(codes.Internal, "error finding user", err)
 }
 
-func (s *AuthorizationSuite) TestLoginFailsOnInvalidPassword() {
+func (s *AuthorizationAPISuite) TestLoginFailsOnInvalidPassword() {
 	//given repository returns a user
 	s.dbMock.EXPECT().Find(testUserName).Return(
 		model.User{PasswordHash: testUserPasswordHash}, nil,
@@ -208,7 +240,7 @@ func (s *AuthorizationSuite) TestLoginFailsOnInvalidPassword() {
 	s.assertStatusError(codes.Unauthenticated, "invalid credentials", err)
 }
 
-func (s *AuthorizationSuite) TestLoginSuccess() {
+func (s *AuthorizationAPISuite) TestLoginSuccess() {
 	//given repository returns a user
 	s.dbMock.EXPECT().Find(testUserName).Return(
 		model.User{PasswordHash: testUserPasswordHash}, nil,
@@ -226,7 +258,7 @@ func (s *AuthorizationSuite) TestLoginSuccess() {
 	s.NotEmpty(rs.Token)
 }
 
-func (s *AuthorizationSuite) assertStatusError(code codes.Code, message string, err error) {
+func (s *AuthorizationAPISuite) assertStatusError(code codes.Code, message string, err error) {
 	s.Require().NotNil(err, "Error is nil")
 	st, ok := status.FromError(err)
 	s.Require().True(ok, "Error is not a status error")

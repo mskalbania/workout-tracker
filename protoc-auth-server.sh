@@ -1,5 +1,6 @@
 mkdir -p ./proto/google/api
 mkdir -p ./proto/google/protobuf
+mkdir -p ./proto/validate
 curl --request GET \
      --url 'https://raw.githubusercontent.com/googleapis/googleapis/refs/heads/master/google/api/http.proto' \
      --output './proto/google/api/http.proto'
@@ -15,6 +16,20 @@ curl --request GET \
 curl --request GET \
      --url 'https://raw.githubusercontent.com/protocolbuffers/protobuf/refs/heads/main/src/google/protobuf/descriptor.proto' \
      --output './proto/google/protobuf/descriptor.proto'
+curl --request GET \
+     --url 'https://raw.githubusercontent.com/protocolbuffers/protobuf/refs/heads/main/src/google/protobuf/duration.proto' \
+     --output './proto/google/protobuf/duration.proto'
+curl --request GET \
+     --url 'https://raw.githubusercontent.com/protocolbuffers/protobuf/refs/heads/main/src/google/protobuf/timestamp.proto' \
+     --output './proto/google/protobuf/timestamp.proto'
+curl --request GET \
+     --url 'https://raw.githubusercontent.com/bufbuild/protoc-gen-validate/refs/heads/main/validate/validate.proto' \
+     --output './proto/validate/validate.proto'
 
 authPath=./proto/auth/v1
-protoc -I ./proto -I ./proto/google/api --go_out=$authPath --go-grpc_out=$authPath $authPath/auth.proto
+
+protoc -I ./proto -I ./proto/google/api \
+--go_out=$authPath \
+--go-grpc_out=$authPath \
+--validate_out="lang=go:$authPath" \
+$authPath/auth.proto

@@ -3,7 +3,8 @@ package main
 import (
 	"authorization-server/api"
 	"authorization-server/db"
-	_ "google.golang.org/genproto/googleapis/api/annotations" //required since using now annotations in proto file
+	_ "github.com/envoyproxy/protoc-gen-validate/validate"    //transitively required by .pb.go
+	_ "google.golang.org/genproto/googleapis/api/annotations" //transitively required by .pb.go
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 	"log"

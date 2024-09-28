@@ -1,7 +1,8 @@
 package main
 
 import (
-	_ "google.golang.org/genproto/googleapis/api"
+	_ "github.com/envoyproxy/protoc-gen-validate/validate"    //transitively required by .pb.go
+	_ "google.golang.org/genproto/googleapis/api/annotations" //transitively required by .pb.go
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 	"log"

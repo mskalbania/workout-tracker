@@ -40,8 +40,8 @@ func NewPostgresDb(conn string) *PostgresDb {
 }
 
 func (i *PostgresDb) Save(user model.User) (model.User, error) {
-	user.Id = uuid.New().String()
-	_, err := i.db.Exec(context.Background(), insertUser, user.Id, user.Username, user.PasswordHash)
+	user.ID = uuid.New().String()
+	_, err := i.db.Exec(context.Background(), insertUser, user.ID, user.Username, user.PasswordHash)
 	if err != nil {
 		return user, err
 	}
@@ -50,7 +50,7 @@ func (i *PostgresDb) Save(user model.User) (model.User, error) {
 
 func (i *PostgresDb) Find(username string) (model.User, error) {
 	var user model.User
-	err := i.db.QueryRow(context.Background(), findUserByEmail, username).Scan(&user.Id, &user.Username, &user.PasswordHash)
+	err := i.db.QueryRow(context.Background(), findUserByEmail, username).Scan(&user.ID, &user.Username, &user.PasswordHash)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return user, ErrUserNotFound
 	}

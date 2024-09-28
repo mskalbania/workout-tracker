@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	_ "github.com/envoyproxy/protoc-gen-validate/validate" //transitively required by .pb.go
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"

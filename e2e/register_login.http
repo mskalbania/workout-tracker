@@ -1,7 +1,7 @@
 ###Register + Login E2E
 < {%
-    client.global.set("username", "test-" + $random.uuid)
-    client.global.set("password", "password")
+    client.global.set("username", "test-" + $random.uuid + "@example.com")
+    client.global.set("password", "password-password")
 %}
 POST http://localhost:8080/v1/auth/register
 Content-Type: application/json
