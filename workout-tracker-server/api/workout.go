@@ -47,6 +47,12 @@ func (w *WorkoutAPI) UpdateWorkout(ctx context.Context, rq *workout.UpdateWorkou
 		return nil, err
 	}
 	if err := w.db.UpdateWorkout(model.FromWorkoutProto(rq.GetWorkout()), rq.UpdateMask); err != nil {
+		if errors.Is(err, db.ErrIncorrectExerciseReferenced) {
+			return nil, status.Error(codes.InvalidArgument, "incorrect exercise referenced")
+		}
+		if errors.Is(err, db.ErrWorkoutExerciseNotFound) {
+			return nil, status.Error(codes.NotFound, "workout exercise not found")
+		}
 		log.Printf("error updating workout: %v", err)
 		return nil, status.Error(codes.Internal, "error updating workout")
 	}
@@ -94,20 +100,6 @@ func (w *WorkoutAPI) DeleteWorkout(ctx context.Context, rq *workout.DeleteWorkou
 	if err := w.db.DeleteWorkout(rq.Id); err != nil {
 		log.Printf("error deleting workout: %v", err)
 		return nil, status.Error(codes.Internal, "error deleting workout")
-	}
-	return &emptypb.Empty{}, nil
-}
-
-func (w *WorkoutAPI) UpdateWorkoutExercise(ctx context.Context, rq *workout.UpdateWorkoutExerciseRequest) (*emptypb.Empty, error) {
-	if err := w.validateWorkoutOwner(ctx, rq.Exercise.WorkoutExerciseId); err != nil {
-		return nil, err
-	}
-	if err := w.db.UpdateWorkoutExercise(model.FromWorkoutExerciseProto(rq.GetExercise()), rq.UpdateMask); err != nil {
-		if errors.Is(err, db.ErrorExerciseNotFound) {
-			return nil, status.Error(codes.NotFound, "exercise not found")
-		}
-		log.Printf("error updating workout exercise: %v", err)
-		return nil, status.Error(codes.Internal, "error updating workout exercise")
 	}
 	return &emptypb.Empty{}, nil
 }

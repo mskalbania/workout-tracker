@@ -61,13 +61,6 @@ service WorkoutService {
       delete: "/v1/workouts/{id}"
     };
   }
-  //workout-exercise API
-  rpc UpdateWorkoutExercise(UpdateWorkoutExerciseRequest) returns (google.protobuf.Empty) {
-    option (google.api.http) = {
-      patch: "/v1/workouts/{exercise.workout_id}/workout-exercises/{exercise.workout_exercise_id}"
-      body: "exercise" //it will automatically populate field mask paths
-    };
-  }
 }
 
 message CreateWorkoutRequest {
@@ -105,11 +98,6 @@ message Workout {
   string name = 2;
   optional string comment = 3;
   repeated WorkoutExercise exercises = 4;
-}
-
-message UpdateWorkoutExerciseRequest {
-  WorkoutExercise exercise = 1;
-  google.protobuf.FieldMask update_mask = 2;
 }
 
 message WorkoutExercise {

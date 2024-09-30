@@ -60,20 +60,26 @@ Content-Type: application/json
 
 {
   "name": "Leg or Back Day",
-  "comment": "Morning workout"
+  "comment": "Morning workout 22",
+  "exercises": [
+    {
+      "exercise_id": "94b4109b-25ba-4519-8aa7-6adef75c0d37",
+      "order": 2,
+      "repetitions": 11,
+      "sets": 5,
+      "comment": "New exercise"
+    },
+    {
+      "exercise_id": "94b4109b-25ba-4519-8aa7-6adef75c0d37",
+      "order": 2,
+      "repetitions": 11,
+      "sets": 5,
+      "comment": "Update existing"
+    }
+  ]
 }
 
 ###
 DELETE localhost:8080/v1/workouts/{{new_workout_id}}
 Authorization: Bearer {{token}}
 
-###
-PATCH localhost:8080/v1/workouts/{{new_workout_id}}/workout-exercises/9401538e-b5c3-4cad-a35b-4140caae3212
-Authorization: Bearer {{token}}
-Content-Type: application/json
-
-{
-  "order": 333,
-  "repetitions": 333,
-  "comment": "Do it fast"
-}
