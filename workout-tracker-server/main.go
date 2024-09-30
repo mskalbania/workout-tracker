@@ -1,14 +1,17 @@
 package main
 
 import (
-	_ "github.com/envoyproxy/protoc-gen-validate/validate"    //transitively required by .pb.go
+	_ "github.com/envoyproxy/protoc-gen-validate/validate" //transitively required by .pb.go
+	grpcAuth "github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/auth"
 	_ "google.golang.org/genproto/googleapis/api/annotations" //transitively required by .pb.go
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 	"log"
 	"net"
 	"os"
+	"os/signal"
 	workout "proto/workout/v1/generated"
+	"syscall"
 	"workout-tracker-server/api"
 	"workout-tracker-server/auth"
 	"workout-tracker-server/db"
@@ -27,7 +30,7 @@ func main() {
 	}
 	defer lis.Close()
 
-	s := grpc.NewServer(grpc.UnaryInterceptor(authorization.UnaryInterceptor))
+	s := grpc.NewServer(grpc.UnaryInterceptor(grpcAuth.UnaryServerInterceptor(authorization.Auth)))
 	workout.RegisterExerciseServiceServer(s, exerciseAPI)
 	workout.RegisterWorkoutServiceServer(s, workoutAPI)
 
@@ -35,8 +38,18 @@ func main() {
 	reflection.Register(s)
 
 	log.Println("starting server on", appConf.listenAddr)
-	if err := s.Serve(lis); err != nil {
-		log.Fatalf("error serving: %v", err)
+	go func() {
+		if err := s.Serve(lis); err != nil {
+			log.Fatalf("error serving: %v", err)
+		}
+	}()
+
+	shutDown := make(chan os.Signal, 1)
+	signal.Notify(shutDown, syscall.SIGINT, syscall.SIGTERM)
+	select {
+	case <-shutDown:
+		log.Println("shutting down server")
+		s.GracefulStop()
 	}
 }
 

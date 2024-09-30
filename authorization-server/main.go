@@ -10,7 +10,9 @@ import (
 	"log"
 	"net"
 	"os"
+	"os/signal"
 	auth "proto/auth/v1/generated"
+	"syscall"
 	"time"
 )
 
@@ -36,8 +38,18 @@ func main() {
 	reflection.Register(s)
 
 	log.Println("starting server on", appConf.listenAddr)
-	if err := s.Serve(lis); err != nil {
-		log.Fatalf("error serving: %v", err)
+	go func() {
+		if err := s.Serve(lis); err != nil {
+			log.Fatalf("error serving: %v", err)
+		}
+	}()
+
+	shutDown := make(chan os.Signal, 1)
+	signal.Notify(shutDown, syscall.SIGINT, syscall.SIGTERM)
+	select {
+	case <-shutDown:
+		log.Println("shutting down server")
+		s.GracefulStop()
 	}
 }
 

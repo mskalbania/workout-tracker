@@ -20,9 +20,8 @@ Run below command to start services - https://github.com/mskalbania/workout-trac
 - authorization server
 - workout tracker server
 
-After stack is ready, request collection can be used from here https://github.com/mskalbania/workout-tracker/blob/main/requests.http[requests.http] to interact with application.
-
-Contains both REST API examples hitting gateway and gRPC to directly talk to services (direct gRPC calls require uncommenting port mapping lines in docker-compose.yaml).
+After stack is ready, request collection can be used from here https://github.com/mskalbania/workout-tracker/blob/main/requests.http[requests.http].
+It contains REST API collection to interact with application.
 
 Alternatively, happy path E2E test can be found here https://github.com/mskalbania/workout-tracker/tree/main/e2e[e2e].
 
@@ -33,15 +32,18 @@ To run tests locally, below steps are required:
 1. run `mockery --all --with-expecter` in root dir to generate mock files, this requires installing 3rd party tool mockery `brew install mockery`
 2. run `protoc-all.sh` in root dir to generate all proto code
 
-== TBD where
-* DB init script & seeder (as per exercise requirement): [db.sql](db.sql)
-* Docker compose to spin up services and dependencies: [docker-compose.yaml](docker-compose.yaml)
-* Using protoc to generate gRPC code: [proto](proto)
+// == TBD where
+// * DB init script & seeder (as per exercise requirement): [db.sql](db.sql)
+// * Docker compose to spin up services and dependencies: [docker-compose.yaml](docker-compose.yaml)
+// * Using protoc to generate gRPC code: [proto](proto)
 
 
-More TODO/Ideas:
+== More Ideas or TODO:
 
-* Add doc on how to run tests - `mockery --all --with-expecter` + `protoc-all.sh`
-* Add validations, add logging
+* Add request logging middleware - grpc-ecosystem
+* Add e2e tests for workout tracker
+* Add API tests for workout API
+* Add db tests for workout repository
+* Add validations for workout API, add request logging
 * Add refresh tokens - currently re-login is required after access token expiry.
 * Switch to always online validation of JWT tokens and keep offline as fallback to invalidate JWT tokens on logout, currently logout = remove token from device cache. Since project is gRPC latency tradeoff could be acceptable.

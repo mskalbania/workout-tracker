@@ -5,12 +5,10 @@ import (
 	"errors"
 	"fmt"
 	"github.com/golang-jwt/jwt/v5"
-	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
 	"log"
-	"slices"
 	"strings"
 )
 
@@ -20,9 +18,6 @@ var (
 	errMissingToken       = status.Errorf(codes.Unauthenticated, "missing token")
 	errExpiredToken       = status.Errorf(codes.Unauthenticated, "invalid token - expired")
 	errMissingClaims      = status.Errorf(codes.Unauthenticated, "invalid token - missing claims")
-	excludedFormAuth      = []string{
-		"/ExerciseService/GetExercises",
-	}
 )
 
 type Authorization struct {
@@ -33,15 +28,13 @@ func NewAuthorization(signingKey string) *Authorization {
 	return &Authorization{[]byte(signingKey)}
 }
 
-func (a *Authorization) UnaryInterceptor(ctx context.Context, rq any, i *grpc.UnaryServerInfo, h grpc.UnaryHandler) (interface{}, error) {
-	if !slices.Contains(excludedFormAuth, i.FullMethod) {
-		userId, err := readUserId(ctx, a.SigningKey)
-		if err != nil {
-			return nil, err
-		}
-		ctx = context.WithValue(ctx, userIdCtxKey, userId)
+func (a *Authorization) Auth(ctx context.Context) (context.Context, error) {
+	userId, err := readUserId(ctx, a.SigningKey)
+	if err != nil {
+		return nil, err
 	}
-	return h(ctx, rq)
+	ctx = context.WithValue(ctx, userIdCtxKey, userId)
+	return ctx, nil
 }
 
 func readUserId(ctx context.Context, signingKey []byte) (string, error) {
