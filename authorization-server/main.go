@@ -3,7 +3,10 @@ package main
 import (
 	"authorization-server/api"
 	"authorization-server/db"
-	_ "github.com/envoyproxy/protoc-gen-validate/validate"    //transitively required by .pb.go
+	"context"
+	"fmt"
+	_ "github.com/envoyproxy/protoc-gen-validate/validate" //transitively required by .pb.go
+	"github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/logging"
 	_ "google.golang.org/genproto/googleapis/api/annotations" //transitively required by .pb.go
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
@@ -12,6 +15,7 @@ import (
 	"os"
 	"os/signal"
 	auth "proto/auth/v1/generated"
+	"strings"
 	"syscall"
 	"time"
 )
@@ -31,7 +35,7 @@ func main() {
 	}
 	defer lis.Close()
 
-	s := grpc.NewServer()
+	s := grpc.NewServer(grpc.UnaryInterceptor(logging.UnaryServerInterceptor(accessLogger(), logging.WithLogOnEvents(logging.FinishCall))))
 	auth.RegisterAuthorizationServiceServer(s, userAPI)
 
 	//for debugging purposes, reflection allows (generic) clients to query for available services, types etc.
@@ -73,4 +77,25 @@ func loadPropertyOrFail(propName string) string {
 		log.Fatalf("%s not set", propName)
 	}
 	return propVal
+}
+
+func accessLogger() logging.LoggerFunc {
+	return func(ctx context.Context, level logging.Level, msg string, fields ...any) {
+		f := make(map[string]string, len(fields)/2)
+		i := logging.Fields(fields).Iterator()
+		for i.Next() {
+			k, v := i.At()
+			f[k] = v.(string)
+		}
+		baseMessage := fmt.Sprintf("%s/%s | %s | %sms",
+			f["grpc.service"],
+			f["grpc.method"],
+			f["grpc.code"],
+			f["grpc.time_ms"],
+		)
+		if err, ok := f["grpc.error"]; ok {
+			baseMessage += fmt.Sprintf(" | Error: %s", strings.SplitAfter(err, "desc = ")[1])
+		}
+		log.Println(baseMessage)
+	}
 }

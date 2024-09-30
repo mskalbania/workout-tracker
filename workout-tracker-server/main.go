@@ -1,8 +1,11 @@
 package main
 
 import (
+	"context"
+	"fmt"
 	_ "github.com/envoyproxy/protoc-gen-validate/validate" //transitively required by .pb.go
 	grpcAuth "github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/auth"
+	"github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/logging"
 	_ "google.golang.org/genproto/googleapis/api/annotations" //transitively required by .pb.go
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
@@ -11,6 +14,7 @@ import (
 	"os"
 	"os/signal"
 	workout "proto/workout/v1/generated"
+	"strings"
 	"syscall"
 	"workout-tracker-server/api"
 	"workout-tracker-server/auth"
@@ -30,7 +34,10 @@ func main() {
 	}
 	defer lis.Close()
 
-	s := grpc.NewServer(grpc.UnaryInterceptor(grpcAuth.UnaryServerInterceptor(authorization.Auth)))
+	s := grpc.NewServer(grpc.ChainUnaryInterceptor(
+		logging.UnaryServerInterceptor(accessLogger(), logging.WithLogOnEvents(logging.FinishCall)),
+		grpcAuth.UnaryServerInterceptor(authorization.Auth),
+	))
 	workout.RegisterExerciseServiceServer(s, exerciseAPI)
 	workout.RegisterWorkoutServiceServer(s, workoutAPI)
 
@@ -73,4 +80,25 @@ func loadPropertyOrFail(propName string) string {
 		log.Fatalf("%s not set", propName)
 	}
 	return propVal
+}
+
+func accessLogger() logging.LoggerFunc {
+	return func(ctx context.Context, level logging.Level, msg string, fields ...any) {
+		f := make(map[string]string, len(fields)/2)
+		i := logging.Fields(fields).Iterator()
+		for i.Next() {
+			k, v := i.At()
+			f[k] = v.(string)
+		}
+		baseMessage := fmt.Sprintf("%s/%s | %s | %sms",
+			f["grpc.service"],
+			f["grpc.method"],
+			f["grpc.code"],
+			f["grpc.time_ms"],
+		)
+		if err, ok := f["grpc.error"]; ok {
+			baseMessage += fmt.Sprintf(" | Error: %s", strings.SplitAfter(err, "desc = ")[1])
+		}
+		log.Println(baseMessage)
+	}
 }

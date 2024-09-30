@@ -40,7 +40,6 @@ To run tests locally, below steps are required:
 
 == More Ideas or TODO:
 
-* Add request logging middleware - grpc-ecosystem
 * Add e2e tests for workout tracker
 * Add API tests for workout API
 * Add db tests for workout repository
