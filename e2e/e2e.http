@@ -1,0 +1,217 @@
+### Register
+< {%
+    client.global.set("username", "test-" + $random.uuid + "@example.com")
+    client.global.set("password", "password-password")
+%}
+POST http://localhost:8080/v1/auth/register
+Content-Type: application/json
+
+{
+    "username": "{{username}}",
+    "password": "{{password}}"
+}
+> {%
+    client.test("Request executed successfully", function () {
+        client.assert(response.status === 200, "Response status is not 200");
+        client.assert(response.body.hasOwnProperty("userId"), "Cannot find 'userId' in response");
+    });
+    client.log(response.body);
+%}
+
+### Login
+POST http://localhost:8080/v1/auth/login
+Content-Type: application/json
+
+{
+    "username": "{{username}}",
+    "password": "{{password}}"
+}
+> {%
+    client.test("Request executed successfully", function () {
+        client.assert(response.status === 200, "Response status is not 200");
+        client.assert(response.body.hasOwnProperty("token"), "Cannot find 'token' in response");
+    });
+    client.global.set("token", response.body.token);
+    client.log(response.body);
+%}
+
+### Display exercises
+GET localhost:8080/v1/exercises?muscle_group_filter=CHEST&category_filter=strength
+
+> {%
+    client.test("Request executed successfully", function () {
+        client.assert(response.status === 200, "Response status is not 200");
+        client.assert(response.body.hasOwnProperty("exercises"), "Cannot find 'exercises' in response");
+        client.assert(response.body.exercises.length == 2, "Expected 2 exercises, got " + response.body.exercises.length);
+    });
+    client.global.set("exercise_1_id", response.body.exercises[0].id);
+    client.global.set("exercise_2_id", response.body.exercises[1].id);
+    client.log(response.body);
+%}
+
+### Create workout
+POST http://localhost:8080/v1/workouts
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+    "name": "Chest Day",
+    "comment": "Do it as fast as you can",
+    "exercises": [
+        {
+            "exercise_id": "{{exercise_1_id}}",
+            "order": 1,
+            "repetitions": 10,
+            "sets": 3,
+            "weight": 50
+        },
+        {
+            "exercise_id": "{{exercise_2_id}}",
+            "order": 2,
+            "repetitions": 10,
+            "sets": 3,
+            "comment": "Do it slowly"
+        }
+    ]
+}
+> {%
+    client.test("Request executed successfully", function () {
+        client.assert(response.status === 200, "Response status is not 200");
+        client.assert(response.body.hasOwnProperty("id"), "Cannot find 'id' in response");
+    });
+    client.global.set("new_workout_id", response.body.id);
+    client.log(response.body);
+%}
+
+### Get all workouts
+GET http://localhost:8080/v1/workouts
+Authorization: Bearer {{token}}
+
+> {%
+    client.test("Request executed successfully", function () {
+        client.assert(response.status === 200, "Response status is not 200");
+        client.assert(response.body.hasOwnProperty("workouts"), "Cannot find 'workouts' in response");
+        client.assert(response.body.workouts.length == 1, "Expected 1 workout, got " + response.body.workouts.length);
+        client.assert(response.body.workouts[0].id == client.global.get("new_workout_id"), "Expected workout id " + client.global.get("new_workout_id") + ", got " + response.body.workouts[0].id);
+        client.assert(response.body.workouts[0].name == "Chest Day", "Expected workout name 'Chest Day', got " + response.body.workouts[0].name);
+        client.assert(response.body.workouts[0].comment == "Do it as fast as you can", "Expected workout comment 'Do it as fast as you can', got " + response.body.workouts[0].comment);
+    });
+    client.log(response.body);
+%}
+
+### Get workout details
+GET http://localhost:8080/v1/workouts/{{new_workout_id}}
+Authorization: Bearer {{token}}
+
+> {%
+    client.test("Request executed successfully", function () {
+        client.assert(response.status === 200, "Response status is not 200");
+        client.assert(response.body.exercises.length == 2, "Expected 2 exercises, got " + response.body.exercises.length);
+        client.assert(response.body.exercises[0].workoutExerciseId != null, "Expected workout exercise id not null, got " + response.body.exercises[0].workoutExerciseId);
+        client.assert(response.body.exercises[0].exerciseId == client.global.get("exercise_1_id"), "Expected exercise id " + client.global.get("exercise_1_id") + ", got " + response.body.exercises[0].exercise_id);
+        client.assert(response.body.exercises[0].order == 1, "Expected exercise order 1, got " + response.body.exercises[0].order);
+        client.assert(response.body.exercises[0].repetitions == 10, "Expected exercise repetitions 10, got " + response.body.exercises[0].repetitions);
+        client.assert(response.body.exercises[0].sets == 3, "Expected exercise sets 3, got " + response.body.exercises[0].sets);
+        client.assert(response.body.exercises[0].weight == 50, "Expected exercise weight 50, got " + response.body.exercises[0].weight);
+        client.assert(response.body.exercises[0].comment == null, "Expected exercise comment null, got " + response.body.exercises[0].comment);
+        client.assert(response.body.exercises[1].workoutExerciseId != null, "Expected workout exercise id not null, got " + response.body.exercises[0].workoutExerciseId);
+        client.assert(response.body.exercises[1].exerciseId == client.global.get("exercise_2_id"), "Expected exercise id " + client.global.get("exercise_2_id") + ", got " + response.body.exercises[1].exercise_id);
+        client.assert(response.body.exercises[1].order == 2, "Expected exercise order 2, got " + response.body.exercises[1].order);
+        client.assert(response.body.exercises[1].repetitions == 10, "Expected exercise repetitions 10, got " + response.body.exercises[1].repetitions);
+        client.assert(response.body.exercises[1].sets == 3, "Expected exercise sets 3, got " + response.body.exercises[1].sets);
+        client.assert(response.body.exercises[1].weight == null, "Expected exercise weight null, got " + response.body.exercises[1].weight);
+        client.assert(response.body.exercises[1].comment == "Do it slowly", "Expected exercise comment 'Do it slowly', got " + response.body.exercises[1].comment);
+    });
+
+    client.global.set("workout_exercise_1_id", response.body.exercises[0].workoutExerciseId);
+    client.global.set("workout_exercise_2_id", response.body.exercises[1].workoutExerciseId);
+    client.log(response.body);
+%}
+
+### Modify first exercise, remove second, add new
+PATCH http://localhost:8080/v1/workouts/{{new_workout_id}}
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+    "name": "Leg day",
+    "comment": "Optional workout :)",
+    "exercises": [
+        {
+            "workout_exercise_id": "{{workout_exercise_1_id}}",
+            "exercise_id": "{{exercise_2_id}}",
+            "order": 2,
+            "repetitions": 100,
+            "sets": 5,
+            "comment": "To hard"
+        },
+        {
+            "exercise_id": "{{exercise_1_id}}",
+            "order": 1,
+            "repetitions": 10,
+            "sets": 3
+        }
+    ]
+}
+> {%
+    client.test("Request executed successfully", function () {
+        client.assert(response.status === 200, "Response status is not 200");
+    });
+    client.log(response.body);
+%}
+
+### Get workout details again to verify changes
+GET http://localhost:8080/v1/workouts/{{new_workout_id}}
+Authorization: Bearer {{token}}
+
+> {%
+    client.test("Request executed successfully", function () {
+        client.assert(response.status === 200, "Response status is not 200");
+        client.assert(response.body.name == "Leg day", "Expected workout name 'Leg day', got " + response.body.name);
+        client.assert(response.body.comment == "Optional workout :)", "Expected workout comment 'Optional workout :)', got " + response.body.comment);
+
+        client.assert(response.body.exercises.length == 2, "Expected 2 exercises, got " + response.body.exercises.length);
+        client.assert(response.body.exercises[0].workoutExerciseId != null, "Expected workout exercise id not null, got " + response.body.exercises[0].workoutExerciseId);
+        client.assert(response.body.exercises[0].workoutExerciseId != client.global.get("workout_exercise_1_id"), "Expected workout exercise id " + client.global.get("workout_exercise_1_id") + ", got " + response.body.exercises[0].workoutExerciseId);
+        client.assert(response.body.exercises[0].workoutExerciseId != client.global.get("workout_exercise_2_id"), "Expected workout exercise id " + client.global.get("workout_exercise_2_id") + ", got " + response.body.exercises[0].workoutExerciseId);
+        client.assert(response.body.exercises[0].exerciseId == client.global.get("exercise_1_id"), "Expected exercise id " + client.global.get("exercise_2_id") + ", got " + response.body.exercises[0].exercise_id);
+        client.assert(response.body.exercises[0].order == 1, "Expected exercise order 2, got " + response.body.exercises[0].order);
+        client.assert(response.body.exercises[0].repetitions == 10, "Expected exercise repetitions 100, got " + response.body.exercises[0].repetitions);
+        client.assert(response.body.exercises[0].sets == 3, "Expected exercise sets 5, got " + response.body.exercises[0].sets);
+        client.assert(response.body.exercises[0].weight == null, "Expected exercise weight null, got " + response.body.exercises[0].weight);
+        client.assert(response.body.exercises[0].comment == null, "Expected exercise comment null, got " + response.body.exercises[0].comment);
+
+        client.assert(response.body.exercises[1].workoutExerciseId == client.global.get("workout_exercise_1_id"), "Expected workout exercise id " + client.global.get("workout_exercise_1_id") + ", got " + response.body.exercises[1].workoutExerciseId);
+        client.assert(response.body.exercises[1].exerciseId == client.global.get("exercise_2_id"), "Expected exercise id " + client.global.get("exercise_2_id") + ", got " + response.body.exercises[1].exercise_id);
+        client.assert(response.body.exercises[1].order == 2, "Expected exercise order 2, got " + response.body.exercises[1].order);
+        client.assert(response.body.exercises[1].repetitions == 100, "Expected exercise repetitions 100, got " + response.body.exercises[1].repetitions);
+        client.assert(response.body.exercises[1].sets == 5, "Expected exercise sets 5, got " + response.body.exercises[1].sets);
+        client.assert(response.body.exercises[1].weight == null, "Expected exercise weight null, got " + response.body.exercises[1].weight);
+        client.assert(response.body.exercises[1].comment == "To hard", "Expected exercise comment 'To hard', got " + response.body.exercises[1].comment);
+    });
+    client.log(response.body);
+%}
+
+### Delete workout
+DELETE http://localhost:8080/v1/workouts/{{new_workout_id}}
+Authorization: Bearer {{token}}
+
+> {%
+    client.test("Request executed successfully", function () {
+        client.assert(response.status === 200, "Response status is not 200");
+    });
+    client.log(response.body);
+%}
+
+### Get all workouts again to verify deletion
+GET http://localhost:8080/v1/workouts
+Authorization: Bearer {{token}}
+
+> {%
+    client.test("Request executed successfully", function () {
+        client.assert(response.status === 200, "Response status is not 200");
+        client.assert(Object.keys(response.body).length === 0, "Expected empty JSON object, got " + JSON.stringify(response.body));
+    });
+    client.log(response.body);
+%}
+

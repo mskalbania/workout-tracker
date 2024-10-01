@@ -15,20 +15,24 @@ import (
 )
 
 var (
-	ErrIncorrectExerciseReferenced       = fmt.Errorf("incorrect exercise referenced")
-	ErrWorkoutNotFound                   = fmt.Errorf("workout not found")
-	ErrWorkoutExerciseNotFound           = fmt.Errorf("workout exercise not found")
-	insertWorkoutQuery                   = `INSERT INTO workout (id, owner, name, comment) VALUES ($1, $2, $3, $4)`
-	insertWorkoutExerciseQuery           = `INSERT INTO workout_exercise (workout_exercise_id, workout_id, exercise_id, "order", repetitions, sets, weight, comment) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`
+	ErrExerciseNotFound        = fmt.Errorf("exercise not found")
+	ErrWorkoutNotFound         = fmt.Errorf("workout not found")
+	ErrWorkoutExerciseNotFound = fmt.Errorf("workout exercise not found")
+
+	insertWorkoutQuery         = `INSERT INTO workout (id, owner, name, comment) VALUES ($1, $2, $3, $4)`
+	insertWorkoutExerciseQuery = `INSERT INTO workout_exercise (workout_exercise_id, workout_id, exercise_id, "order", repetitions, sets, weight, comment) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`
+
 	selectWorkoutExercisesByWorkoutId    = `SELECT workout_exercise_id, exercise_id, "order", repetitions, sets, weight, comment FROM workout_exercise WHERE workout_id = $1`
 	selectWorkoutExercisesIdsByWorkoutId = `SELECT workout_exercise_id FROM workout_exercise WHERE workout_id = $1`
-	updateWorkoutExerciseQuery           = `UPDATE workout_exercise SET exercise_id = $1, "order" = $2, repetitions = $3, sets = $4, weight = $5, comment = $6 WHERE workout_exercise_id = $7`
-	updateWorkoutQuery                   = `UPDATE workout SET`
 	selectWorkoutByIdQuery               = `SELECT id, owner, name, comment FROM workout WHERE id = $1`
-	selectWorkoutsByUserIdQuery          = `SELECT id, owner, name, comment FROM workout WHERE owner = $1`
 	selectWorkoutOwnerQuery              = `SELECT owner FROM workout WHERE id = $1`
-	deleteWorkoutQuery                   = `DELETE FROM workout WHERE id = $1`
-	deleteWorkoutExercise                = `DELETE FROM workout_exercise WHERE workout_exercise_id = $1`
+	selectWorkoutsByUserIdQuery          = `SELECT id, owner, name, comment FROM workout WHERE owner = $1`
+
+	updateWorkoutExerciseQuery = `UPDATE workout_exercise SET exercise_id = $1, "order" = $2, repetitions = $3, sets = $4, weight = $5, comment = $6 WHERE workout_exercise_id = $7`
+	updateWorkoutQuery         = `UPDATE workout SET`
+
+	deleteWorkoutQuery    = `DELETE FROM workout WHERE id = $1`
+	deleteWorkoutExercise = `DELETE FROM workout_exercise WHERE workout_exercise_id = $1`
 )
 
 type WorkoutDb interface {
@@ -59,7 +63,7 @@ func (p *PostgresDb) SaveWorkout(workout model.Workout) (string, error) {
 		if _, err = tx.Exec(ctx, insertWorkoutExerciseQuery, workoutExerciseId, workoutId, ex.ExerciseID, ex.Order, ex.Repetitions, ex.Sets, ex.Weight, ex.Comment); err != nil {
 			var pgErr *pgconn.PgError
 			if errors.As(err, &pgErr) && (pgErr.Code == "23503") { // foreign key violation
-				return "", ErrIncorrectExerciseReferenced
+				return "", ErrExerciseNotFound
 			}
 			return "", err
 		}
@@ -178,7 +182,7 @@ func updateWorkoutExercise(tx pgx.Tx, ex model.WorkoutExercise) error {
 	if err != nil {
 		var pgErr *pgconn.PgError
 		if errors.As(err, &pgErr) && (pgErr.Code == "23503") { // foreign key violation or invalid input syntax
-			return ErrIncorrectExerciseReferenced
+			return ErrExerciseNotFound
 		}
 		return err
 	}
@@ -191,7 +195,7 @@ func saveWorkoutExercise(tx pgx.Tx, workoutId string, ex model.WorkoutExercise) 
 	if err != nil {
 		var pgErr *pgconn.PgError
 		if errors.As(err, &pgErr) && (pgErr.Code == "23503") { // foreign key violation or invalid input syntax
-			return ErrIncorrectExerciseReferenced
+			return ErrExerciseNotFound
 		}
 		return err
 	}

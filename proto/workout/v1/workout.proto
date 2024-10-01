@@ -53,7 +53,7 @@ service WorkoutService {
   rpc ListWorkouts(google.protobuf.Empty) returns (ListWorkoutsResponse) {
     option (google.api.http) = {
       get: "/v1/workouts"
-      response_body: "workouts"
+      //using wrapper around workouts here to avoid null JSON response due to EmitUnpopulated: false
     };
   }
   rpc DeleteWorkout(DeleteWorkoutRequest) returns (google.protobuf.Empty) {

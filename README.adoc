@@ -8,6 +8,11 @@ Workout tracker REST < - > gRPC implementation based on project idea - https://r
 
 == Stack & Tools
 
+- grpc-gateway as reverse proxy to expose gRPC services as REST
+* project link https://github.com/grpc-ecosystem/grpc-gateway
+* grpc-gateway entry point https://github.com/mskalbania/workout-tracker/blob/main/grpc-gateway/main.go[grpc-gateway/main.go]
+* grpc-gateway proto annotations https://github.com/mskalbania/workout-tracker/blob/main/proto/workout/v1/workout.proto[workout.proto]
+
 == Setup
 
 === Local Stack
@@ -21,9 +26,9 @@ Run below command to start services - https://github.com/mskalbania/workout-trac
 - workout tracker server
 
 After stack is ready, request collection can be used from here https://github.com/mskalbania/workout-tracker/blob/main/requests.http[requests.http].
-It contains REST API collection to interact with application.
+It contains (JetBrains HTTP client) REST API collection to interact with application.
 
-Alternatively, happy path E2E test can be found here https://github.com/mskalbania/workout-tracker/tree/main/e2e[e2e].
+Alternatively, happy path E2E test can be found here https://github.com/mskalbania/workout-tracker/tree/main/e2e/e2e.http[e2e.http].
 
 === Tests
 
@@ -32,15 +37,8 @@ To run tests locally, below steps are required:
 1. run `mockery --all --with-expecter` in root dir to generate mock files, this requires installing 3rd party tool mockery `brew install mockery`
 2. run `protoc-all.sh` in root dir to generate all proto code
 
-// == TBD where
-// * DB init script & seeder (as per exercise requirement): [db.sql](db.sql)
-// * Docker compose to spin up services and dependencies: [docker-compose.yaml](docker-compose.yaml)
-// * Using protoc to generate gRPC code: [proto](proto)
-
-
 == More Ideas or TODO:
 
-* Add e2e tests for workout tracker
 * Add API tests for workout API
 * Add db tests for workout repository
 * Add validations for workout API, add request logging

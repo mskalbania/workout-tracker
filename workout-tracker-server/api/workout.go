@@ -1,6 +1,7 @@
 package api
 
 import (
+	"cmp"
 	"context"
 	"errors"
 	"google.golang.org/grpc/codes"
@@ -8,6 +9,7 @@ import (
 	"google.golang.org/protobuf/types/known/emptypb"
 	"log"
 	workout "proto/workout/v1/generated"
+	"slices"
 	"workout-tracker-server/auth"
 	"workout-tracker-server/db"
 	"workout-tracker-server/model"
@@ -31,7 +33,7 @@ func (w *WorkoutAPI) CreateWorkout(ctx context.Context, rq *workout.CreateWorkou
 	wrk.OwnerID = userId
 	id, err := w.db.SaveWorkout(wrk)
 	if err != nil {
-		if errors.Is(err, db.ErrIncorrectExerciseReferenced) {
+		if errors.Is(err, db.ErrExerciseNotFound) {
 			return nil, status.Error(codes.InvalidArgument, "incorrect exercise referenced")
 		}
 		log.Printf("error saving workout: %v", err)
@@ -47,7 +49,7 @@ func (w *WorkoutAPI) UpdateWorkout(ctx context.Context, rq *workout.UpdateWorkou
 		return nil, err
 	}
 	if err := w.db.UpdateWorkout(model.FromWorkoutProto(rq.GetWorkout()), rq.UpdateMask); err != nil {
-		if errors.Is(err, db.ErrIncorrectExerciseReferenced) {
+		if errors.Is(err, db.ErrExerciseNotFound) {
 			return nil, status.Error(codes.InvalidArgument, "incorrect exercise referenced")
 		}
 		if errors.Is(err, db.ErrWorkoutExerciseNotFound) {
@@ -87,6 +89,11 @@ func (w *WorkoutAPI) GetWorkout(ctx context.Context, rq *workout.GetWorkoutReque
 		log.Printf("error getting workout: %v", err)
 		return nil, status.Error(codes.Internal, "error getting workout")
 	} else {
+		wrk.Exercises = slices.SortedFunc(slices.Values(wrk.Exercises),
+			func(e1 model.WorkoutExercise, e2 model.WorkoutExercise) int {
+				return cmp.Compare(e1.Order, e2.Order)
+			},
+		)
 		return &workout.GetWorkoutResponse{
 			Workout: wrk.ToProto(),
 		}, nil
