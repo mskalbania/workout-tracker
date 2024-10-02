@@ -34,7 +34,7 @@ Alternatively, happy path E2E test can be found here https://github.com/mskalban
 
 To run tests locally, below steps are required:
 
-1. run `mockery --all --with-expecter` in root dir to generate mock files, this requires installing 3rd party tool mockery `brew install mockery`
+1. run `mockery --all --with-expecter` inside selected app directory _(authorization-server | workout-tracker-server)_ to generate mock files, this requires installing 3rd party tool mockery `brew install mockery`
 2. run `protoc-all.sh` in root dir to generate all proto code
 
 == More Ideas or TODO:

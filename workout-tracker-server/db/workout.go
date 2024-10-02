@@ -47,10 +47,7 @@ type WorkoutDb interface {
 func (p *PostgresDb) SaveWorkout(workout model.Workout) (string, error) {
 	workoutId := uuid.New().String()
 	ctx := context.Background()
-	tx, err := p.db.BeginTx(ctx, pgx.TxOptions{
-		IsoLevel:   pgx.ReadCommitted,
-		AccessMode: pgx.ReadWrite,
-	})
+	tx, err := p.db.BeginTx(ctx, pgx.TxOptions{IsoLevel: pgx.ReadCommitted, AccessMode: pgx.ReadWrite})
 	if err != nil {
 		return "", err
 	}
@@ -61,11 +58,7 @@ func (p *PostgresDb) SaveWorkout(workout model.Workout) (string, error) {
 	for _, ex := range workout.Exercises {
 		workoutExerciseId := uuid.New().String()
 		if _, err = tx.Exec(ctx, insertWorkoutExerciseQuery, workoutExerciseId, workoutId, ex.ExerciseID, ex.Order, ex.Repetitions, ex.Sets, ex.Weight, ex.Comment); err != nil {
-			var pgErr *pgconn.PgError
-			if errors.As(err, &pgErr) && (pgErr.Code == "23503") { // foreign key violation
-				return "", ErrExerciseNotFound
-			}
-			return "", err
+			return notFoundOrErr(err, ErrExerciseNotFound)
 		}
 	}
 	if err = tx.Commit(ctx); err != nil {
@@ -264,4 +257,12 @@ func (p *PostgresDb) DeleteWorkout(id string) error {
 		return err
 	}
 	return nil
+}
+
+func notFoundOrErr(err error, notFound error) (string, error) {
+	var pgErr *pgconn.PgError
+	if errors.As(err, &pgErr) && (pgErr.Code == "23503") { // foreign key violation
+		return "", notFound
+	}
+	return "", err
 }

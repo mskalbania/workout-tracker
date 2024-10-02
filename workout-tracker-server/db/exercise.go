@@ -10,24 +10,24 @@ import (
 const selectFromExercise = "SELECT * FROM exercise"
 
 type ExerciseDb interface {
-	GetExercises(muscleGroup string, category string) ([]*model.Exercise, error)
+	GetExercises(muscleGroup string, category string) ([]model.Exercise, error)
 }
 
-func (p *PostgresDb) GetExercises(muscleGroup string, category string) ([]*model.Exercise, error) {
+func (p *PostgresDb) GetExercises(muscleGroup string, category string) ([]model.Exercise, error) {
 	query, args := getExercisesQuery(muscleGroup, category)
 	rows, err := p.db.Query(context.Background(), query, args...)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var exercises []*model.Exercise
+	var exercises []model.Exercise
 	for rows.Next() {
 		var ex model.Exercise
 		err := rows.Scan(&ex.ID, &ex.Name, &ex.Description, &ex.Category, &ex.MuscleGroup)
 		if err != nil {
 			return nil, err
 		}
-		exercises = append(exercises, &ex)
+		exercises = append(exercises, ex)
 	}
 	return exercises, nil
 }
