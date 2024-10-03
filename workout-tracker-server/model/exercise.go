@@ -16,5 +16,6 @@ func (e Exercise) ToProto() *workout.Exercise {
 		Name:        e.Name,
 		MuscleGroup: e.MuscleGroup,
 		Category:    e.Category,
+		Description: e.Description,
 	}
 }

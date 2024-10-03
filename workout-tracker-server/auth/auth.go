@@ -5,10 +5,12 @@ import (
 	"errors"
 	"fmt"
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
 	"log"
+	"proto/workout/v1/generated"
 	"strings"
 )
 
@@ -35,6 +37,10 @@ func (a *Authorization) Auth(ctx context.Context) (context.Context, error) {
 	}
 	ctx = context.WithValue(ctx, userIdCtxKey, userId)
 	return ctx, nil
+}
+
+func Secured(_ context.Context, meta interceptors.CallMeta) bool {
+	return meta.Service != generated.ExerciseService_ServiceDesc.ServiceName
 }
 
 func readUserId(ctx context.Context, signingKey []byte) (string, error) {

@@ -14,11 +14,6 @@ type ExerciseAPI struct {
 	db db.ExerciseDb
 }
 
-func (e *ExerciseAPI) AuthFuncOverride(ctx context.Context, fullMethodName string) (context.Context, error) {
-	//this disables auth for all ExerciseService
-	return ctx, nil
-}
-
 func NewExerciseAPI(db db.ExerciseDb) *ExerciseAPI {
 	return &ExerciseAPI{db: db}
 }

@@ -49,7 +49,6 @@ func (s *AuthorizationAPISuite) SetupSuite() {
 	s.cleanup = func() {
 		closeCl()
 		closeSrv()
-		lis.Close()
 	}
 }
 

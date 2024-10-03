@@ -6,6 +6,7 @@ import (
 	_ "github.com/envoyproxy/protoc-gen-validate/validate" //transitively required by .pb.go
 	grpcAuth "github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/auth"
 	"github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/logging"
+	"github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/selector"
 	_ "google.golang.org/genproto/googleapis/api/annotations" //transitively required by .pb.go
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
@@ -36,7 +37,7 @@ func main() {
 
 	s := grpc.NewServer(grpc.ChainUnaryInterceptor(
 		logging.UnaryServerInterceptor(accessLogger(), logging.WithLogOnEvents(logging.FinishCall)),
-		grpcAuth.UnaryServerInterceptor(authorization.Auth),
+		selector.UnaryServerInterceptor(grpcAuth.UnaryServerInterceptor(authorization.Auth), selector.MatchFunc(auth.Secured)),
 	))
 	workout.RegisterExerciseServiceServer(s, exerciseAPI)
 	workout.RegisterWorkoutServiceServer(s, workoutAPI)
