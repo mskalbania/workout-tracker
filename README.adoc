@@ -40,7 +40,6 @@ To run tests locally, below steps are required:
 == More Ideas or TODO:
 
 * Add API tests for workout API
-* Add db tests for workout repository
-* Add validations for workout API, add request logging
+* Implement scheduling and report generation requirement
 * Add refresh tokens - currently re-login is required after access token expiry.
 * Switch to always online validation of JWT tokens and keep offline as fallback to invalidate JWT tokens on logout, currently logout = remove token from device cache. Since project is gRPC latency tradeoff could be acceptable.

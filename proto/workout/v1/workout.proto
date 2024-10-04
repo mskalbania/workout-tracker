@@ -4,6 +4,7 @@ option go_package = "./generated";
 import "google/api/annotations.proto";
 import "google/protobuf/empty.proto";
 import "google/protobuf/field_mask.proto";
+import "validate/validate.proto";
 
 service ExerciseService {
   rpc GetExercises(GetExercisesRequest) returns (GetExercisesResponse) {
@@ -72,7 +73,7 @@ message CreateWorkoutResponse {
 }
 
 message GetWorkoutRequest {
-  string id = 1;
+  string id = 1 [(validate.rules).string.uuid = true];
 }
 
 message GetWorkoutResponse {
@@ -89,26 +90,33 @@ message ListWorkoutsResponse {
 }
 
 message DeleteWorkoutRequest {
-  string id = 1;
+  string id = 1 [(validate.rules).string.uuid = true];
 }
 
 message Workout {
   // Output only.
-  string id = 1;
-  string name = 2;
+  string id = 1 [
+    (validate.rules).string.uuid = true,
+    (validate.rules).string.ignore_empty = true
+  ];
+  string name = 2 [(validate.rules).string.min_len = 1];
   optional string comment = 3;
   repeated WorkoutExercise exercises = 4;
 }
 
 message WorkoutExercise {
-  // Output only.
-  string workout_exercise_id = 1;
-  // Output only.
-  string workout_id = 2;
-  string exercise_id = 3;
-  int32 order = 4;
-  int32 repetitions = 5;
-  int32 sets = 6;
-  optional int32 weight = 7;
+  string workout_exercise_id = 1 [
+    (validate.rules).string.uuid = true,
+    (validate.rules).string.ignore_empty = true //omitted when update
+  ];
+  string workout_id = 2 [
+    (validate.rules).string.uuid = true,
+    (validate.rules).string.ignore_empty = true //omitted when update
+  ];
+  string exercise_id = 3 [(validate.rules).string.uuid = true];
+  int32 order = 4 [(validate.rules).int32.gt = 0];
+  int32 repetitions = 5 [(validate.rules).int32.gt = 0];
+  int32 sets = 6 [(validate.rules).int32.gt = 0];
+  optional int32 weight = 7 [(validate.rules).int32.gt = 0];
   optional string comment = 8;
 }

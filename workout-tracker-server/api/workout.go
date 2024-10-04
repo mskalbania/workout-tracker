@@ -24,7 +24,17 @@ func NewWorkoutAPI(db db.WorkoutDb) *WorkoutAPI {
 	return &WorkoutAPI{db: db}
 }
 
+func validationError(errProvider func() error) error {
+	return status.Error(
+		codes.InvalidArgument,
+		errProvider().Error(),
+	)
+}
+
 func (w *WorkoutAPI) CreateWorkout(ctx context.Context, rq *workout.CreateWorkoutRequest) (*workout.CreateWorkoutResponse, error) {
+	if err := rq.Validate(); err != nil {
+		return nil, validationError(func() error { return err.(workout.CreateWorkoutRequestValidationError).Cause() })
+	}
 	userId, err := auth.GetUserId(ctx)
 	if err != nil {
 		return nil, status.Error(codes.Internal, "user id not found in context")
@@ -33,9 +43,6 @@ func (w *WorkoutAPI) CreateWorkout(ctx context.Context, rq *workout.CreateWorkou
 	wrk.OwnerID = userId
 	id, err := w.db.SaveWorkout(wrk)
 	if err != nil {
-		if errors.Is(err, db.ErrExerciseNotFound) {
-			return nil, status.Error(codes.InvalidArgument, "incorrect exercise referenced")
-		}
 		log.Printf("error saving workout: %v", err)
 		return nil, status.Error(codes.Internal, "error saving workout")
 	}
@@ -45,13 +52,13 @@ func (w *WorkoutAPI) CreateWorkout(ctx context.Context, rq *workout.CreateWorkou
 }
 
 func (w *WorkoutAPI) UpdateWorkout(ctx context.Context, rq *workout.UpdateWorkoutRequest) (*emptypb.Empty, error) {
+	if err := rq.Validate(); err != nil {
+		return nil, validationError(func() error { return err.(workout.UpdateWorkoutRequestValidationError).Cause() })
+	}
 	if err := w.validateWorkoutOwner(ctx, rq.Workout.Id); err != nil {
 		return nil, err
 	}
 	if err := w.db.UpdateWorkout(model.FromWorkoutProto(rq.GetWorkout()), rq.UpdateMask); err != nil {
-		if errors.Is(err, db.ErrExerciseNotFound) {
-			return nil, status.Error(codes.InvalidArgument, "incorrect exercise referenced")
-		}
 		if errors.Is(err, db.ErrWorkoutExerciseNotFound) {
 			return nil, status.Error(codes.NotFound, "workout exercise not found")
 		}
@@ -79,6 +86,9 @@ func (w *WorkoutAPI) ListWorkouts(ctx context.Context, _ *emptypb.Empty) (*worko
 }
 
 func (w *WorkoutAPI) GetWorkout(ctx context.Context, rq *workout.GetWorkoutRequest) (*workout.GetWorkoutResponse, error) {
+	if err := rq.Validate(); err != nil {
+		return nil, validationError(func() error { return err.(workout.GetWorkoutRequestValidationError) })
+	}
 	if err := w.validateWorkoutOwner(ctx, rq.Id); err != nil {
 		return nil, err
 	}
@@ -101,6 +111,9 @@ func (w *WorkoutAPI) GetWorkout(ctx context.Context, rq *workout.GetWorkoutReque
 }
 
 func (w *WorkoutAPI) DeleteWorkout(ctx context.Context, rq *workout.DeleteWorkoutRequest) (*emptypb.Empty, error) {
+	if err := rq.Validate(); err != nil {
+		return nil, validationError(func() error { return err.(workout.DeleteWorkoutRequestValidationError) })
+	}
 	if err := w.validateWorkoutOwner(ctx, rq.Id); err != nil {
 		return nil, err
 	}

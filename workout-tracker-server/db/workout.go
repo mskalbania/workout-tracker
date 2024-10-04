@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
-	"github.com/jackc/pgx/v5/pgconn"
 	"google.golang.org/protobuf/types/known/fieldmaskpb"
 	"slices"
 	"strconv"
@@ -15,7 +14,6 @@ import (
 )
 
 var (
-	ErrExerciseNotFound        = fmt.Errorf("exercise not found")
 	ErrWorkoutNotFound         = fmt.Errorf("workout not found")
 	ErrWorkoutExerciseNotFound = fmt.Errorf("workout exercise not found")
 
@@ -58,7 +56,7 @@ func (p *PostgresDb) SaveWorkout(workout model.Workout) (string, error) {
 	for _, ex := range workout.Exercises {
 		workoutExerciseId := uuid.New().String()
 		if _, err = tx.Exec(ctx, insertWorkoutExerciseQuery, workoutExerciseId, workoutId, ex.ExerciseID, ex.Order, ex.Repetitions, ex.Sets, ex.Weight, ex.Comment); err != nil {
-			return notFoundOrErr(err, ErrExerciseNotFound)
+			return "", err
 		}
 	}
 	if err = tx.Commit(ctx); err != nil {
@@ -171,12 +169,7 @@ func getExistingExercises(tx pgx.Tx, workoutId string) ([]string, error) {
 }
 
 func updateWorkoutExercise(tx pgx.Tx, ex model.WorkoutExercise) error {
-	_, err := tx.Exec(context.Background(), updateWorkoutExerciseQuery, ex.ExerciseID, ex.Order, ex.Repetitions, ex.Sets, ex.Weight, ex.Comment, ex.WorkoutExerciseID)
-	if err != nil {
-		var pgErr *pgconn.PgError
-		if errors.As(err, &pgErr) && (pgErr.Code == "23503") { // foreign key violation or invalid input syntax
-			return ErrExerciseNotFound
-		}
+	if _, err := tx.Exec(context.Background(), updateWorkoutExerciseQuery, ex.ExerciseID, ex.Order, ex.Repetitions, ex.Sets, ex.Weight, ex.Comment, ex.WorkoutExerciseID); err != nil {
 		return err
 	}
 	return nil
@@ -184,12 +177,7 @@ func updateWorkoutExercise(tx pgx.Tx, ex model.WorkoutExercise) error {
 
 func saveWorkoutExercise(tx pgx.Tx, workoutId string, ex model.WorkoutExercise) error {
 	id := uuid.New().String()
-	_, err := tx.Exec(context.Background(), insertWorkoutExerciseQuery, id, workoutId, ex.ExerciseID, ex.Order, ex.Repetitions, ex.Sets, ex.Weight, ex.Comment)
-	if err != nil {
-		var pgErr *pgconn.PgError
-		if errors.As(err, &pgErr) && (pgErr.Code == "23503") { // foreign key violation or invalid input syntax
-			return ErrExerciseNotFound
-		}
+	if _, err := tx.Exec(context.Background(), insertWorkoutExerciseQuery, id, workoutId, ex.ExerciseID, ex.Order, ex.Repetitions, ex.Sets, ex.Weight, ex.Comment); err != nil {
 		return err
 	}
 	return nil
@@ -257,12 +245,4 @@ func (p *PostgresDb) DeleteWorkout(id string) error {
 		return err
 	}
 	return nil
-}
-
-func notFoundOrErr(err error, notFound error) (string, error) {
-	var pgErr *pgconn.PgError
-	if errors.As(err, &pgErr) && (pgErr.Code == "23503") { // foreign key violation
-		return "", notFound
-	}
-	return "", err
 }

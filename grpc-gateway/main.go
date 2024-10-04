@@ -6,7 +6,6 @@ import (
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
-	"google.golang.org/grpc/grpclog"
 	"google.golang.org/protobuf/encoding/protojson"
 	"log"
 	"net/http"
@@ -28,7 +27,6 @@ func main() {
 	if workoutSrcAddr == "" {
 		log.Fatalf("WORKOUT_SERVER_ADDR not set")
 	}
-	grpclog.SetLoggerV2(grpclog.NewLoggerV2(os.Stdout, os.Stdout, os.Stdout))
 
 	mux := runtime.NewServeMux(
 		runtime.WithErrorHandler(UnaryErrorHandler),

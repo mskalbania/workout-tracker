@@ -137,7 +137,6 @@ func (s *WorkoutSuite) TestSaveIsTransactional() {
 
 	//then
 	s.Require().Error(err)
-	s.Require().ErrorIs(err, ErrExerciseNotFound)
 
 	//and when getting workout
 	workouts, err := s.workoutDb.GetWorkouts(userId)
@@ -467,7 +466,6 @@ func (s *WorkoutSuite) TestUpdateIsTransactional() {
 
 	//then
 	s.Require().Error(err)
-	s.Require().ErrorIs(err, ErrExerciseNotFound)
 
 	//and when getting workout
 	wrk, err := s.workoutDb.GetWorkout(workoutId)
