@@ -4,6 +4,7 @@ option go_package = "./generated";
 import "google/api/annotations.proto";
 import "google/protobuf/empty.proto";
 import "google/protobuf/field_mask.proto";
+import "google/protobuf/timestamp.proto";
 import "validate/validate.proto";
 
 service ExerciseService {
@@ -120,3 +121,60 @@ message WorkoutExercise {
   optional int32 weight = 7 [(validate.rules).int32.gt = 0];
   optional string comment = 8;
 }
+
+service WorkoutScheduleService {
+  //workout scheduling API
+  rpc ScheduleWorkout(ScheduleWorkoutRequest) returns (ScheduleWorkoutResponse) {
+    option (google.api.http) = {
+      post: "/v1/workout-schedules"
+      body: "workout_schedule"
+    };
+  }
+  rpc MarkWorkoutComplete(MarkWorkoutCompleteRequest) returns (google.protobuf.Empty) {
+    option (google.api.http) = {
+      post: "/v1/workout-schedules/{id}/complete"
+    };
+  }
+  rpc GetWorkoutScheduleReport(GetWorkoutScheduleReportRequest) returns (GetWorkoutScheduleReportResponse) {
+    option (google.api.http) = {
+      get: "/v1/workout-schedules/report"
+    };
+  }
+}
+
+message ScheduleWorkoutRequest {
+  WorkoutSchedule workout_schedule = 1;
+}
+
+message ScheduleWorkoutResponse {
+  string id = 1;
+}
+
+message MarkWorkoutCompleteRequest {
+  string id = 1 [(validate.rules).string.uuid = true];
+}
+
+message GetWorkoutScheduleReportRequest {
+  google.protobuf.Timestamp start_date = 2 [(validate.rules).timestamp.required = true];
+  google.protobuf.Timestamp end_date = 3 [(validate.rules).timestamp.required = true];
+}
+
+message GetWorkoutScheduleReportResponse {
+  repeated WorkoutSchedule workout_schedules = 1;
+}
+
+message WorkoutSchedule {
+  // Output only.
+  string id = 1 [
+    (validate.rules).string.uuid = true,
+    (validate.rules).string.ignore_empty = true
+  ];
+  string workout_id = 2 [(validate.rules).string.uuid = true];
+  google.protobuf.Timestamp schedule_date = 4 [
+    (validate.rules).timestamp.required = true,
+    (validate.rules).timestamp.gt_now = true
+  ];
+  // Output only.
+  bool completed = 5;
+}
+

@@ -42,10 +42,12 @@ CREATE INDEX workout_exercise_exercise_id_index ON workout_exercise (exercise_id
 
 CREATE TABLE workout_schedule
 (
-    id          uuid PRIMARY KEY,
-    "owner"     uuid      NOT NULL,
-    plan        uuid      NOT NULL REFERENCES workout (id) On DELETE CASCADE,
-    scheduledAt TIMESTAMP NOT NULL
+    id           uuid PRIMARY KEY,
+    "owner"      uuid      NOT NULL,
+    workout      uuid      NOT NULL REFERENCES workout (id) On DELETE CASCADE,
+    scheduled_at TIMESTAMP NOT NULL,
+    crated_at    TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    completed    boolean   NOT NULL DEFAULT FALSE
 );
 
 -- Populating here since this is some predefined data
