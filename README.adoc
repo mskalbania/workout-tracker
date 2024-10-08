@@ -1,10 +1,8 @@
 = workout-tracker
-
-Workout tracker REST < - > gRPC implementation based on project idea - https://roadmap.sh/projects/fitness-workout-tracker
-
 :toc:
 :toclevels: 4
-toc::[]
+
+Workout tracker REST < - > gRPC implementation based on project idea - https://roadmap.sh/projects/fitness-workout-tracker
 
 == System Design
 
@@ -12,9 +10,7 @@ toc::[]
 
 You are required to develop an API for a workout tracker application that allows users to manage their workouts and track their progress.
 
-==== Main (taken from roadmap.sh)
-
-**Expose API for register/login:**
+*Expose API for register/login:*
 
 - Allow users to create an account, passwords are stored securely (bcrypt selected)
 - Allow users to log in to their account, after successful login JWT token is issued (signed with symmetric key for simplicity)
@@ -47,7 +43,7 @@ _All require access token obtained through login flow._
 
 image::docs/diagram.png[Architecture Diagram]
 
-=== External API Draft
+=== External API
 
 *authorization-service*
 
@@ -332,7 +328,7 @@ To run tests locally, below steps are required:
 1. run `mockery --all --with-expecter` inside selected app directory _(authorization-server | workout-tracker-server)_ to generate mock files, this requires installing 3rd party tool mockery `brew install mockery`
 2. run `protoc-all.sh` in root dir to generate all proto code
 
-== More Ideas or TODO:
+== More Ideas or TODOs
 
 * Add API tests for workout
 * Implement scheduling and report generation requirement
