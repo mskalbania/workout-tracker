@@ -51,20 +51,33 @@ _All require access token obtained through login flow._
 
 - POST /v1/auth/register
 
-[.request]
+.Request
+[%collapsible]
 =====
 [source,json]
 ----
 {
   "username": "ghost@gmail.com",
   "password": "qwerty"
+}
+----
+=====
+
+.Response
+[%collapsible]
+=====
+[source,json]
+----
+{
+  "userId": "5b7557db-f7a2-4abf-a92a-bd79881164f6"
 }
 ----
 =====
 
 - POST /v1/auth/login
 
-[.request]
+.Request
+[%collapsible]
 =====
 [source,json]
 ----
@@ -75,7 +88,8 @@ _All require access token obtained through login flow._
 ----
 =====
 
-[.response]
+.Response
+[%collapsible]
 =====
 [source,json]
 ----
