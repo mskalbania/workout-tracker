@@ -4,18 +4,101 @@ Workout tracker REST < - > gRPC implementation based on project idea - https://r
 
 :toc:
 
-== Architecture
+== System Design
 
-== Stack & Tools
+=== Functional Requirements
+
+You are required to develop an API for a workout tracker application that allows users to manage their workouts and track their progress.
+
+==== Main (taken from roadmap.sh)
+
+**Expose API for register/login:**
+
+- Allow users to create an account, passwords are stored securely (bcrypt selected)
+- Allow users to log in to their account, after successful login JWT token is issued (signed with symmetric key for simplicity)
+
+*Expose API for workout management:*
+
+_All require access token obtained through login flow._
+
+- Allow users to create workouts composed of multiple exercises
+- Allow users to update workouts and add comments
+- Allow users to delete workouts
+- Allow users to schedule workouts for specific dates and times
+- List active or pending workouts sorted by date and time
+- Generate reports on past workouts and progress
+
+*Additional:*
+
+- Allow users to list system predefined exercises, no access control required here
+
+=== Non-functional Requirements
+
+- high performance and latency are critical, internal communication is using gRPC protocol
+- REST API, reverse proxy (grpc-gateway) is put in front of all services to provide translation layer
+- cloud native app, horizontally scalable, deployed to container orchestration system
+- load balanced implied by above, using gRPC client side load balancing with kubernetes headless service
+- encryption in transit not required -higher consistency levels not required, prefer availability and latency over consistency (PACELC theorem)
+- high availability is required, all writes should be replicated to at least one additional instance, replica can be used to serve reads, high consistency not required but replication should be synchronous to prevent data loss
+
+=== Architecture Diagram
+
+>TODO<
+
+=== External API Draft
+
+*authorization-service*
+
+- POST /v1/auth/register
+
+[.request]
+=====
+[source,json]
+----
+{
+  "username": "ghost@gmail.com",
+  "password": "qwerty"
+}
+----
+=====
+
+- POST /v1/auth/login
+
+[.request]
+=====
+[source,json]
+----
+{
+  "username": "ghost@gmail.com",
+  "password": "qwerty"
+}
+----
+=====
+
+[.response]
+=====
+[source,json]
+----
+{
+  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiNjEwZjQwZjAtMjUwZi00ZjQwLWEwZjYtZmQ0MGYwZjQwZjA0IiwiaWF0IjoxNjI5MjIwNjQyLCJleHAiOjE2MjkzMDcxNDJ9"
+}
+----
+=====
+
+== Implementation
+
+=== Stack & Tools
 
 - grpc-gateway as reverse proxy to expose gRPC services as REST
 * project link https://github.com/grpc-ecosystem/grpc-gateway
 * grpc-gateway entry point https://github.com/mskalbania/workout-tracker/blob/main/grpc-gateway/main.go[grpc-gateway/main.go]
 * grpc-gateway proto annotations https://github.com/mskalbania/workout-tracker/blob/main/proto/workout/v1/workout.proto[workout.proto]
 
-== Setup
+>TODO<
 
-=== Local Stack
+=== Setup
+
+==== Local Stack
 
 Docker compose file is provided to spin up services and dependencies.
 Run below command to start services - https://github.com/mskalbania/workout-tracker/blob/main/docker-compose.yaml[docker-compose.yaml]
@@ -30,7 +113,7 @@ It contains (JetBrains HTTP client) REST API collection to interact with applica
 
 Alternatively, happy path E2E test can be found here https://github.com/mskalbania/workout-tracker/tree/main/e2e/e2e.http[e2e.http].
 
-=== Tests
+==== Tests
 
 To run tests locally, below steps are required:
 
@@ -39,7 +122,9 @@ To run tests locally, below steps are required:
 
 == More Ideas or TODO:
 
-* Add API tests for workout API
+* Add API tests for workout
 * Implement scheduling and report generation requirement
+
 * Add refresh tokens - currently re-login is required after access token expiry.
-* Switch to always online validation of JWT tokens and keep offline as fallback to invalidate JWT tokens on logout, currently logout = remove token from device cache. Since project is gRPC latency tradeoff could be acceptable.
+* Switch to always online validation of JWT tokens and keep offline as fallback to invalidate JWT tokens on logout, currently logout = remove token from device cache.
+Since project is gRPC latency tradeoff could be acceptable.
