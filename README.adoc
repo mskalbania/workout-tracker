@@ -2,8 +2,13 @@
 :toc:
 :toclevels: 4
 
-Workout tracker REST < - > gRPC implementation based on project idea - https://roadmap.sh/projects/fitness-workout-tracker
+'''
 
+*Workout tracker REST <--> gRPC implementation based on project idea from roadmap.sh*
+
+https://roadmap.sh/projects/fitness-workout-tracker
+
+'''
 == System Design
 
 === Functional Requirements
