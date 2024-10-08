@@ -3,6 +3,8 @@
 Workout tracker REST < - > gRPC implementation based on project idea - https://roadmap.sh/projects/fitness-workout-tracker
 
 :toc:
+:toclevels: 4
+toc::[]
 
 == System Design
 
@@ -43,13 +45,16 @@ _All require access token obtained through login flow._
 
 === Architecture Diagram
 
->TODO<
+image::docs/diagram.png[Architecture Diagram]
 
 === External API Draft
 
 *authorization-service*
 
-- POST /v1/auth/register
+[source]
+----
+POST /v1/auth/register
+----
 
 .Request
 [%collapsible]
@@ -74,7 +79,10 @@ _All require access token obtained through login flow._
 ----
 =====
 
-- POST /v1/auth/login
+[source]
+----
+POST /v1/auth/login
+----
 
 .Request
 [%collapsible]
@@ -98,6 +106,196 @@ _All require access token obtained through login flow._
 }
 ----
 =====
+
+*workout-tracker-service*
+
+[source]
+----
+GET /v1/exercises?muscle_group_filter={muscle_group}&category_filter={category}
+----
+
+.Response
+[%collapsible]
+=====
+[source,json]
+----
+{
+  "exercises": [
+    {
+      "id": "94b4109b-25ba-4519-8aa7-6adef75c0d37",
+      "name": "Bench Press",
+      "muscle_group": "CHEST",
+      "category": "strength"
+    }
+  ]
+}
+----
+=====
+
+[source]
+----
+POST /v1/workouts
+Authorization: Bearer <token>
+----
+
+.Request
+[%collapsible]
+=====
+[source,json]
+----
+{
+  "name": "Back Day",
+  "comment": "Do it as fast as you can",
+  "exercises": [
+    {
+      "exercise_id": "94b4109b-25ba-4519-8aa7-6adef75c0d37",
+      "order": 1,
+      "repetitions": 10,
+      "sets": 3,
+      "weight": 50,
+      "comment": "Do it slowly"
+    }
+  ]
+}
+----
+=====
+
+.Response
+[%collapsible]
+=====
+[source,json]
+----
+{
+  "id": "5b7557db-f7a2-4abf-a92a-bd79881164f6"
+}
+----
+=====
+
+[source]
+----
+GET /v1/workouts
+Authorization: Bearer <token>
+----
+
+.Response
+[%collapsible]
+=====
+[source,json]
+----
+{
+  "workouts": [
+    {
+      "id": "5b7557db-f7a2-4abf-a92a-bd79881164f6",
+      "name": "Back Day",
+      "comment": "Do it as fast as you can"
+    },
+    {
+      "id": "5b7557db-f7a2-4abf-a92a-bd79881164f6",
+      "name": "Leg Day"
+    }
+  ]
+}
+----
+=====
+
+[source]
+----
+GET /v1/workouts/{workout_id}
+Authorization: Bearer <token>
+----
+
+.Response
+[%collapsible]
+=====
+[source,json]
+----
+{
+  "id": "5b7557db-f7a2-4abf-a92a-bd79881164f6",
+  "name": "Back Day",
+  "comment": "Do it as fast as you can",
+  "exercises": [
+    {
+      "exercise_id": "94b4109b-25ba-4519-8aa7-6adef75c0d37",
+      "order": 1,
+      "repetitions": 10,
+      "sets": 3,
+      "weight": 50,
+      "comment": "Do it slowly"
+    }
+  ]
+}
+----
+=====
+
+[source]
+----
+PATCH /v1/workouts/{workout_id}
+Authorization: Bearer <token>
+----
+
+.Request
+[%collapsible]
+=====
+[source,json]
+----
+{
+  "name": "Leg or Back Day",
+  "comment": "Morning workout 22",
+  "exercises": [
+    {
+      "exercise_id": "94b4109b-25ba-4519-8aa7-6adef75c0d37",
+      "order": 2,
+      "repetitions": 11,
+      "sets": 5,
+      "comment": "New exercise"
+    },
+    {
+      "exercise_id": "94b4109b-25ba-4519-8aa7-6adef75c0d37",
+      "order": 2,
+      "repetitions": 11,
+      "sets": 5,
+      "comment": "Update existing"
+    }
+  ]
+}
+----
+=====
+
+.Response
+[%collapsible]
+=====
+[source,json]
+----
+{}
+----
+=====
+
+[source]
+----
+DELETE /v1/workouts/{workout_id}
+Authorization: Bearer <token>
+----
+
+.Response
+[%collapsible]
+=====
+[source,json]
+----
+{}
+----
+=====
+
+>TODO - add scheduling and report generation API<
+
+=== Internal API
+
+*authorization-service*
+
+https://github.com/mskalbania/workout-tracker/blob/main/proto/auth/v1/auth.proto[auth.proto]
+
+*workout-tracker-service*
+
+https://github.com/mskalbania/workout-tracker/blob/main/proto/workout/v1/workout.proto[workout.proto]
 
 == Implementation
 
