@@ -35,6 +35,8 @@ _All require access token obtained through login flow._
 
 - Allow users to list system predefined exercises, no access control required here
 
+'''
+
 === Non-functional Requirements
 
 - high performance and latency are critical, internal communication is using gRPC protocol
@@ -44,9 +46,13 @@ _All require access token obtained through login flow._
 - encryption in transit not required -higher consistency levels not required, prefer availability and latency over consistency (PACELC theorem)
 - high availability is required, all writes should be replicated to at least one additional instance, replica can be used to serve reads, high consistency not required but replication should be synchronous to prevent data loss
 
+'''
+
 === Architecture Diagram
 
 image::docs/diagram.png[Architecture Diagram]
+
+'''
 
 === External API
 
@@ -286,7 +292,76 @@ Authorization: Bearer <token>
 ----
 =====
 
->TODO - add scheduling and report generation API<
+[source]
+----
+POST /v1/workout-schedules
+Authorization: Bearer <token>
+----
+
+.Request
+[%collapsible]
+=====
+[source,json]
+----
+{
+    "workout_id": "4f97a755-aeee-4d23-a518-0f8c82680014",
+    "schedule_at": "2025-12-31T23:00:59Z"
+}
+----
+=====
+
+.Response
+[%collapsible]
+=====
+[source,json]
+----
+{
+    "id": "4f97a755-aeee-4d23-a518-0f8c82680014"
+}
+----
+=====
+
+[source]
+----
+POST /v1/workout-schedules/{workout_schedule_id}/complete
+Authorization: Bearer <token>
+----
+
+.Response
+[%collapsible]
+=====
+[source,json]
+----
+{}
+----
+=====
+
+[source]
+----
+GET /v1/workout-schedules/report?start_date={date_time}&end_date={date_time}
+Authorization: Bearer <token>
+----
+
+.Response
+[%collapsible]
+=====
+[source,json]
+----
+{
+    "workout_schedules": [
+        {
+            "id": "4f97a755-aeee-4d23-a518-0f8c82680014",
+            "workout_id": "4f97a755-aeee-4d23-a518-0f8c82680014",
+            "schedule_at": "2025-12-31T23:00:59Z",
+            "created_at": "2025-12-31T23:00:59Z",
+            "completed": true
+        }
+    ]
+}
+----
+=====
+
+'''
 
 === Internal API
 
@@ -336,8 +411,6 @@ To run tests locally, below steps are required:
 == More Ideas or TODOs
 
 * Add API tests for workout
-* Implement scheduling and report generation requirement
-
 * Add refresh tokens - currently re-login is required after access token expiry.
 * Switch to always online validation of JWT tokens and keep offline as fallback to invalidate JWT tokens on logout, currently logout = remove token from device cache.
 Since project is gRPC latency tradeoff could be acceptable.
