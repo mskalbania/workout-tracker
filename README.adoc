@@ -375,14 +375,14 @@ https://github.com/mskalbania/workout-tracker/blob/main/proto/workout/v1/workout
 
 == Implementation
 
+TODO - SECTION IS UNFINISHED - TODO
+
 === Stack & Tools
 
 - grpc-gateway as reverse proxy to expose gRPC services as REST
 * project link https://github.com/grpc-ecosystem/grpc-gateway
 * grpc-gateway entry point https://github.com/mskalbania/workout-tracker/blob/main/grpc-gateway/main.go[grpc-gateway/main.go]
 * grpc-gateway proto annotations https://github.com/mskalbania/workout-tracker/blob/main/proto/workout/v1/workout.proto[workout.proto]
-
->TODO<
 
 === Setup
 
