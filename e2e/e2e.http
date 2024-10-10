@@ -192,6 +192,54 @@ Authorization: Bearer {{token}}
     client.log(response.body);
 %}
 
+### Schedule workout
+POST http://localhost:8080/v1/workout-schedules
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+    "workout_id": "{{new_workout_id}}",
+    "schedule_at": "2025-12-31T23:00:59Z"
+}
+
+> {%
+    client.test("Request executed successfully", function () {
+        client.assert(response.status === 200, "Response status is not 200");
+        client.assert(response.body.hasOwnProperty("id"), "Cannot find 'id' in response");
+    });
+    client.global.set("workout_schedule_id", response.body.id);
+    client.log(response.body);
+%}
+
+### Mark workout as complete
+POST http://localhost:8080/v1/workout-schedules/{{workout_schedule_id}}/complete
+Authorization: Bearer {{token}}
+
+> {%
+    client.test("Request executed successfully", function () {
+        client.assert(response.status === 200, "Response status is not 200");
+    });
+    client.log(response.body);
+%}
+
+### Get workout schedule report
+GET http://localhost:8080/v1/workout-schedules/report?start_date=2023-12-31T00:00:00Z&end_date=2026-12-31T23:59:59Z
+Authorization: Bearer {{token}}
+
+> {%
+    client.test("Request executed successfully", function () {
+        client.assert(response.status === 200, "Response status is not 200");
+        client.assert(response.body.hasOwnProperty("workoutSchedules"), "Cannot find 'workoutSchedules' in response");
+        client.assert(response.body.workoutSchedules.length == 1, "Expected 1 workout schedule, got " + response.body.workoutSchedules.length);
+        client.assert(response.body.workoutSchedules[0].id == client.global.get("workout_schedule_id"), "Expected workout schedule id " + client.global.get("workout_schedule_id") + ", got " + response.body.workoutSchedules[0].id);
+        client.assert(response.body.workoutSchedules[0].workoutId == client.global.get("new_workout_id"), "Expected workout id " + client.global.get("new_workout_id") + ", got " + response.body.workoutSchedules[0].workoutId);
+        client.assert(response.body.workoutSchedules[0].scheduleAt == "2025-12-31T23:00:59Z", "Expected scheduled at '2025-12-31T23:00:59Z', got " + response.body.workoutSchedules[0].sheduledAt);
+        client.assert(response.body.workoutSchedules[0].completed == true, "Expected workout completed true, got " + response.body.workoutSchedules[0].completed);
+        client.assert(response.body.workoutSchedules[0].createdAt != null, "Expected created at not null, got " + response.body.workoutSchedules[0].createdAt);
+    });
+    client.log(response.body);
+%}
+
 ### Delete workout
 DELETE http://localhost:8080/v1/workouts/{{new_workout_id}}
 Authorization: Bearer {{token}}

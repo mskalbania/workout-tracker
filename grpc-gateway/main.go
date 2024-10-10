@@ -47,6 +47,10 @@ func main() {
 	if err != nil {
 		log.Fatalf("error registering workout service handler: %v", err)
 	}
+	err = workout.RegisterWorkoutScheduleServiceHandlerFromEndpoint(context.Background(), mux, workoutSrcAddr, opts)
+	if err != nil {
+		log.Fatalf("error registering workout schedule service handler: %v", err)
+	}
 	// Start HTTP server (and proxy calls to gRPC server endpoint)
 	err = http.ListenAndServe(listenAddr, mux)
 	if err != nil {

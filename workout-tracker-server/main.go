@@ -28,6 +28,7 @@ func main() {
 	authorization := auth.NewAuthorization(appConf.jwtSignKey)
 	exerciseAPI := api.NewExerciseAPI(database)
 	workoutAPI := api.NewWorkoutAPI(database)
+	workoutScheduleAPI := api.NewWorkoutScheduleAPI(database, database)
 
 	lis, err := net.Listen("tcp", appConf.listenAddr)
 	if err != nil {
@@ -41,6 +42,7 @@ func main() {
 	))
 	workout.RegisterExerciseServiceServer(s, exerciseAPI)
 	workout.RegisterWorkoutServiceServer(s, workoutAPI)
+	workout.RegisterWorkoutScheduleServiceServer(s, workoutScheduleAPI)
 
 	//for debugging purposes, reflection allows (generic) clients to query for available services, types etc.
 	reflection.Register(s)

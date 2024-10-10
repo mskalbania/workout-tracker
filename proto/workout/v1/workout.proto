@@ -155,8 +155,8 @@ message MarkWorkoutCompleteRequest {
 }
 
 message GetWorkoutScheduleReportRequest {
-  google.protobuf.Timestamp start_date = 2 [(validate.rules).timestamp.required = true];
-  google.protobuf.Timestamp end_date = 3 [(validate.rules).timestamp.required = true];
+  google.protobuf.Timestamp start_date = 1 [(validate.rules).timestamp.required = true];
+  google.protobuf.Timestamp end_date = 2 [(validate.rules).timestamp.required = true];
 }
 
 message GetWorkoutScheduleReportResponse {
@@ -165,15 +165,14 @@ message GetWorkoutScheduleReportResponse {
 
 message WorkoutSchedule {
   // Output only.
-  string id = 1 [
-    (validate.rules).string.uuid = true,
-    (validate.rules).string.ignore_empty = true
-  ];
+  string id = 1;
   string workout_id = 2 [(validate.rules).string.uuid = true];
-  google.protobuf.Timestamp schedule_date = 4 [
+  google.protobuf.Timestamp schedule_at = 3 [
     (validate.rules).timestamp.required = true,
     (validate.rules).timestamp.gt_now = true
   ];
+  // Output only.
+  google.protobuf.Timestamp created_at = 4;
   // Output only.
   bool completed = 5;
 }
