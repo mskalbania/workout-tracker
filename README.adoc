@@ -375,10 +375,14 @@ https://github.com/mskalbania/workout-tracker/blob/main/proto/workout/v1/workout
 
 == Implementation
 
-TODO - SECTION IS UNFINISHED - TODO
-
 === Stack & Tools
 
+- go grpc
+- envoyproxy validate
+- postgres
+- test-containers
+- testify
+- mockery
 - grpc-gateway as reverse proxy to expose gRPC services as REST
 * project link https://github.com/grpc-ecosystem/grpc-gateway
 * grpc-gateway entry point https://github.com/mskalbania/workout-tracker/blob/main/grpc-gateway/main.go[grpc-gateway/main.go]
@@ -412,5 +416,3 @@ To run tests locally, below steps are required:
 
 * Add API tests for workout
 * Add refresh tokens - currently re-login is required after access token expiry.
-* Switch to always online validation of JWT tokens and keep offline as fallback to invalidate JWT tokens on logout, currently logout = remove token from device cache.
-Since project is gRPC latency tradeoff could be acceptable.
