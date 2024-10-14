@@ -1,14 +1,13 @@
 package db
 
 import (
-	"context"
 	"fmt"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/suite"
-	"github.com/testcontainers/testcontainers-go/modules/postgres"
 	"google.golang.org/protobuf/types/known/fieldmaskpb"
 	"testing"
 	"workout-tracker-server/model"
+	"workout-tracker-server/test"
 )
 
 const (
@@ -28,26 +27,12 @@ func TestWorkoutSuite(t *testing.T) {
 }
 
 func (s *WorkoutSuite) SetupSuite() {
-	pgCt, err := postgres.Run(context.Background(),
-		"postgres:16-alpine",
-		postgres.WithUsername("postgres"),
-		postgres.WithPassword("postgres"),
-		postgres.WithDatabase("postgres"),
-		postgres.WithInitScripts("../../init.sql"),
-		postgres.BasicWaitStrategies(),
-	)
+	port, err, cleanup := test.SetupTestContainersDb()
 	if err != nil {
 		s.T().Fatal(err)
 	}
-	port, err := pgCt.MappedPort(context.Background(), "5432")
-	if err != nil {
-		s.T().Fatal(err)
-	}
-	s.T().Log("Started postgres container on port: ", port.Int())
-	s.workoutDb = NewPostgresDb(fmt.Sprintf("postgresql://postgres:postgres@localhost:%d/postgres", port.Int()))
-	s.cleanup = func() {
-		pgCt.Terminate(context.Background())
-	}
+	s.workoutDb = NewPostgresDb(fmt.Sprintf("postgresql://postgres:postgres@localhost:%d/postgres", port))
+	s.cleanup = cleanup
 }
 
 func (s *WorkoutSuite) TearDownSuite() {

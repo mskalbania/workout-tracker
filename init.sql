@@ -3,7 +3,7 @@ CREATE TABLE "user"
     id            uuid PRIMARY KEY,
     email         VARCHAR(255) NOT NULL,
     password_hash VARCHAR(255) NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP AT TIME ZONE 'UTC'
+    created_at TIMESTAMP DEFAULT (now() AT TIME ZONE 'UTC')
 );
 
 CREATE TABLE exercise
@@ -46,7 +46,7 @@ CREATE TABLE workout_schedule
     "owner"      uuid      NOT NULL,
     workout      uuid      NOT NULL REFERENCES workout (id) On DELETE CASCADE,
     scheduled_at TIMESTAMP NOT NULL,
-    crated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP AT TIME ZONE 'UTC',
+    crated_at TIMESTAMP NOT NULL DEFAULT (now() AT TIME ZONE 'UTC'),
     completed    boolean   NOT NULL DEFAULT FALSE
 );
 

@@ -11,7 +11,7 @@ const (
 	insertWorkoutSchedule          = "INSERT INTO workout_schedule(id, owner, workout, scheduled_at) VALUES ($1,$2,$3,$4)"
 	updateWorkoutScheduleCompleted = "UPDATE workout_schedule SET completed = true WHERE id = $1"
 	selectWorkoutScheduleOwner     = "SELECT owner FROM workout_schedule WHERE id = $1"
-	selectWorkoutSchedulesBetween  = "SELECT id, owner, workout, scheduled_at, crated_at, completed FROM workout_schedule WHERE owner = $1 AND crated_at >= $2 AND crated_at <= $3"
+	selectWorkoutSchedulesBetween  = "SELECT id, owner, workout, scheduled_at, crated_at, completed FROM workout_schedule WHERE owner = $1 AND scheduled_at >= $2 AND scheduled_at <= $3"
 )
 
 type WorkoutScheduleDb interface {
