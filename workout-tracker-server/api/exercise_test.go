@@ -31,8 +31,8 @@ func (s *ExerciseAPISuite) SetupSuite() {
 	dbMock := mocks.NewExerciseDb(s.T())
 	lis := bufconn.Listen(1024 * 1024)
 
-	closeSrv := setupServer(s.T(), lis, dbMock)
-	client, closeCl := setupClient(s.T(), lis)
+	closeSrv := setupExerciseTestServer(s.T(), lis, dbMock)
+	client, closeCl := setupExerciseTestClient(s.T(), lis)
 
 	s.dbMock = dbMock
 	s.exerciseClient = client
@@ -47,7 +47,7 @@ func (s *ExerciseAPISuite) TearDownSuite() {
 	s.cleanup()
 }
 
-func setupServer(t *testing.T, listener *bufconn.Listener, dbMock *mocks.ExerciseDb) func() {
+func setupExerciseTestServer(t *testing.T, listener *bufconn.Listener, dbMock *mocks.ExerciseDb) func() {
 	server := grpc.NewServer()
 	workout.RegisterExerciseServiceServer(server, NewExerciseAPI(dbMock))
 	go func() {
@@ -60,7 +60,7 @@ func setupServer(t *testing.T, listener *bufconn.Listener, dbMock *mocks.Exercis
 	}
 }
 
-func setupClient(t *testing.T, listener *bufconn.Listener) (workout.ExerciseServiceClient, func()) {
+func setupExerciseTestClient(t *testing.T, listener *bufconn.Listener) (workout.ExerciseServiceClient, func()) {
 	client, err := grpc.NewClient("passthrough://",
 		grpc.WithContextDialer(func(context.Context, string) (net.Conn, error) { return listener.Dial() }),
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
